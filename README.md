@@ -1,7 +1,10 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # nideshop-server
 This project is based on thinkjs
 =======
+=======
+>>>>>>> e1e195458802665096a97b61ab84cbfa1bbbac0c
 ### NideShop商城（服务端）
 
 + 界面高仿网易严选商城(主要是2016年wap版)
@@ -106,4 +109,7 @@ npm start
 喜欢别忘了Star
 本项目长期更新完善，欢迎Watch
 交流QQ群：497145766
+<<<<<<< HEAD
 >>>>>>> init
+=======
+>>>>>>> e1e195458802665096a97b61ab84cbfa1bbbac0c
