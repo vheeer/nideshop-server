@@ -1,26 +1,93 @@
 const Base = require('./base.js');
 
 module.exports = class extends Base {
+  async indexAction() {
+    console.log("this.ctx: ", this.ctx);
+    console.log("this: ", this.get('id'));
+    return this.success("success to option");
+  }
+
+  /**
+   * read request
+   * @return {Promise}
+   */
+  async readAction() {
+    console.log("this.get is ", this.get());
+
+    const { id, page, pageSize, order } = this.get();
+    let data;
+    if(id) //按id查询
+    {
+      data = await this.model("order").where({ id }).select();
+    }
+    else if(!id) //批量查询
+    {
+      if(order) //按字段排序
+      {
+        data = await this.model("order").order(order).page(page, pageSize).countSelect();
+      }
+      else if(!order) //默认排序
+      {
+        data = await this.model("order").page(page, pageSize).countSelect();
+      }
+    }
+    return this.success(data);
+  }  
+
+  /**
+   * read request
+   * @return {Promise}
+   */
+  async createAction() {
+    console.log("this.post is ", this.post());
+    console.log("{...this.post()}", {...this.post()});
+    let result;
+    
+    result = await this.model("order").add(this.post());
+    
+    return this.success(result);
+  } 
+
+  /**
+   * update request
+   * @return {Promise}
+   */
+  async updateAction() {
+    console.log("this.post is ", this.post());
+    const postBody = this.post();
+    const { id } = postBody;
+    delete postBody.id;
+
+    let data = await this.model("order").where({ id }).update(postBody);
+    
+    return this.success(data);
+  }
+
+  /**
+   * delete request
+   * @return {Promise}
+   */
+  async deleteAction() {
+    console.log("this.post is ", this.post());
+    const postBody = this.post();
+    const { id } = postBody;
+
+    if(!id)
+      return this.fail("id is undefined");
+
+    let data = await this.model("order").where({ id }).delete();
+    
+    return this.success(data);
+  }
+
+
+
+
+
   /**
    * index action
    * @return {Promise} []
-   */
-  async indexAction() {
-    const page = this.get('page') || 1;
-    const size = this.get('size') || 10;
-    const orderSn = this.get('orderSn') || '';
-    const consignee = this.get('consignee') || '';
 
-    const model = this.model('order');
-    const data = await model.where({order_sn: ['like', `%${orderSn}%`], consignee: ['like', `%${consignee}%`]}).order(['id DESC']).page(page, size).countSelect();
-    const newList = [];
-    for (const item of data.data) {
-      item.order_status_text = await this.model('order').getOrderStatusText(item.id);
-      newList.push(item);
-    }
-    data.data = newList;
-    return this.success(data);
-  }
 
   async infoAction() {
     const id = this.get('id');

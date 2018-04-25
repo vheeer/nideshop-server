@@ -8,11 +8,12 @@ const partner_key = "dapingkejiviewdapingkejiviewdapi";
 let appid = "wx5efb8f7416263ee2";
 let secret = "c7923d89128f6f5deb4c039d1a1a254f";
 let mch_id = "1494794472";
-let notify_url = "https://www.dapingkeji.com/nide/api/pay/notify";
+let notify_url = "https://www.yinmudianying.club/nideshop/api/pay/notify";
 module.exports = {
   default_module: 'api',
   default_controller: 'auth', 
   default_action: 'test',
+  file_path: "https://www.yinmudianying.club/nideshop/files",
   weixin: {
     appid, // 小程序 appid
     secret, // 小程序密钥

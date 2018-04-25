@@ -9,7 +9,7 @@ module.exports = class extends Base {
     const categoryId = this.get('id');
 
     const model = this.model('category');
-    const data = await model.limit(10).where({parent_id: 0}).select();
+    const data = await model.limit(10).where({parent_id: 0}).order("show_index asc").select();
 
     let currentCategory = null;
     if (categoryId) {

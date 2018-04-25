@@ -1,22 +1,12 @@
 const Base = require('./base.js');
-const fs = require('fs');
 
 module.exports = class extends Base {
-  async brandPicAction() {
-    const brandFile = this.file('brand_pic');
-    if (think.isEmpty(brandFile)) {
-      return this.fail('保存失败');
-    }
-    const that = this;
-    const filename = '/static/upload/brand/' + think.uuid(32) + '.jpg';
-    const is = fs.createReadStream(brandFile.path);
-    const os = fs.createWriteStream(think.ROOT_PATH + '/www' + filename);
-    is.pipe(os);
-
-    return that.success({
-      name: 'brand_pic',
-      fileUrl: 'http://127.0.0.1:8360' + filename
-    });
+  async imageAction() {
+    //储存
+    const saveImgService = this.service('saveImg');
+    const { save_path, url } = saveImgService.save(this.file());
+    
+    return this.success(url);
   }
 
   async brandNewPicAction() {

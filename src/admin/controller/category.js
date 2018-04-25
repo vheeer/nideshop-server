@@ -2,37 +2,12 @@ const Base = require('./base.js');
 
 module.exports = class extends Base {
   /**
-   * 旧的index
-   * index action
-   * @return {Promise} []
-   */
-  // async indexAction() {
-  //   const model = this.model('category');
-  //   const data = await model.where({is_show: 1}).order(['sort_order ASC']).select();
-  //   const topCategory = data.filter((item) => {
-  //     return item.parent_id === 0;
-  //   });
-  //   const categoryList = [];
-  //   topCategory.map((item) => {
-  //     item.level = 1;
-  //     categoryList.push(item);
-  //     data.map((child) => {
-  //       if (child.parent_id === item.id) {
-  //         child.level = 2;
-  //         categoryList.push(child);
-  //       }
-  //     });
-  //   });
-  //   return this.success(categoryList);
-  // }
-
-  /**
    * index action
    * @return {Promise} []
    */
   async indexAction() {
     const model = this.model('category');
-    const data = await model.select();
+    const data = await model.order("sort_order asc").select();
     // const data = await model.where({ is_show: 1 }).select();
     return this.success(data);
   }
@@ -53,10 +28,33 @@ module.exports = class extends Base {
    * @return {Promise} []
    */
   async addCategoryAction() {
-    const params = this.post();
+    const { parent_id } = this.post();
     const model = this.model('category');
-    const lastInserId = await model.add({ name: "新增分类" });
-    const result = await model.where({ id: lastInserId }).find();
+    console.log(parent_id);
+    let result;
+    if(!think.isEmpty(parent_id)){
+      const lastInserId = await model.add({ name: "新分类", parent_id, level: "L2" });
+      result = await model.where({ id: lastInserId }).find();
+    }else{
+      const lastInserId = await model.add({ name: "新分类" });
+      result = await model.where({ id: lastInserId }).find();
+    }
+    return this.success(result);
+  }
+  /**
+   * image action
+   * @return {Promise} []
+   */
+  async changeImageAction() {
+    const { categoryId, column } = this.get();
+    //储存
+    const saveImgService = this.service('saveImg');
+    const { save_path, url } = saveImgService.save(this.file());
+    //入库
+    const updateObj = {};
+          updateObj[column] = url;
+    const result = await this.model('category').where({ id: categoryId }).update(updateObj);
+    
     return this.success(result);
   }
 

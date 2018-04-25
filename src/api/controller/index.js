@@ -13,6 +13,8 @@ module.exports = class extends Base {
     const newCategoryList = [];
     for (const categoryItem of categoryList) {  
       const childCategoryIds = await this.model('category').where({parent_id: categoryItem.id}).getField('id', 100);
+      if(childCategoryIds.length === 0)
+        continue;
       const categoryGoods = await this.model('goods').field(['id', 'name', 'list_pic_url', 'retail_price']).where({category_id: ['IN', childCategoryIds]}).limit(7).select();
       newCategoryList.push({
         id: categoryItem.id,
