@@ -39,11 +39,13 @@ module.exports = class extends Base {
    * @return {Promise}
    */
   async createAction() {
-    console.log("this.post is ", this.post());
-    console.log("{...this.post()}", {...this.post()});
+    return this.fail("can not create");
     let result;
     
-    result = await this.model("order").add(this.post());
+    result = await this.model("order").add({ 
+      ...this.post(), 
+      add_time: parseInt(new Date().getTime()/1000) 
+    });
     
     return this.success(result);
   } 
@@ -68,7 +70,7 @@ module.exports = class extends Base {
    * @return {Promise}
    */
   async deleteAction() {
-    console.log("this.post is ", this.post());
+    return this.fail("can not delete");
     const postBody = this.post();
     const { id } = postBody;
 
