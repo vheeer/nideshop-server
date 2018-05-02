@@ -1,122 +1,12 @@
 const Base = require('./base.js');
+const Rest = require('./rest.js');
+const { readAction, createAction, updateAction, deleteAction, changeImageAction } = Rest("order");
 
-module.exports = class extends Base {
+class top extends Base {
   async indexAction() {
     console.log("this.ctx: ", this.ctx);
     console.log("this: ", this.get('id'));
     return this.success("success to option");
-  }
-
-  /**
-   * read request
-   * @return {Promise}
-   */
-  async readAction() {
-    console.log("this.get is ", this.get());
-
-    const { id, page, pageSize, order } = this.get();
-    let data;
-    if(id) //按id查询
-    {
-      data = await this.model("order").where({ id }).select();
-    }
-    else if(!id) //批量查询
-    {
-      if(order) //按字段排序
-      {
-        data = await this.model("order").order(order).page(page, pageSize).countSelect();
-      }
-      else if(!order) //默认排序
-      {
-        data = await this.model("order").page(page, pageSize).countSelect();
-      }
-    }
-    return this.success(data);
-  }  
-
-  /**
-   * read request
-   * @return {Promise}
-   */
-  async createAction() {
-    return this.fail("can not create");
-    let result;
-    
-    result = await this.model("order").add({ 
-      ...this.post(), 
-      add_time: parseInt(new Date().getTime()/1000) 
-    });
-    
-    return this.success(result);
-  } 
-
-  /**
-   * update request
-   * @return {Promise}
-   */
-  async updateAction() {
-    console.log("this.post is ", this.post());
-    const postBody = this.post();
-    const { id } = postBody;
-    delete postBody.id;
-
-    let data = await this.model("order").where({ id }).update(postBody);
-    
-    return this.success(data);
-  }
-
-  /**
-   * delete request
-   * @return {Promise}
-   */
-  async deleteAction() {
-    return this.fail("can not delete");
-    const postBody = this.post();
-    const { id } = postBody;
-
-    if(!id)
-      return this.fail("id is undefined");
-
-    let data = await this.model("order").where({ id }).delete();
-    
-    return this.success(data);
-  }
-
-
-
-
-
-  /**
-   * index action
-   * @return {Promise} []
-
-
-  async infoAction() {
-    const id = this.get('id');
-    const model = this.model('order');
-    const data = await model.where({id: id}).find();
-
-    return this.success(data);
-  }
-
-  async storeAction() {
-    if (!this.isPost) {
-      return false;
-    }
-
-    const values = this.post();
-    const id = this.post('id');
-
-    const model = this.model('order');
-    values.is_show = values.is_show ? 1 : 0;
-    values.is_new = values.is_new ? 1 : 0;
-    if (id > 0) {
-      await model.where({id: id}).update(values);
-    } else {
-      delete values.id;
-      await model.add(values);
-    }
-    return this.success(values);
   }
 
   /**
@@ -242,3 +132,9 @@ module.exports = class extends Base {
     return this.success();
   }
 };
+top.prototype.readAction = readAction;
+top.prototype.createAction = createAction;
+top.prototype.updateAction = updateAction;
+top.prototype.deleteAction = deleteAction;
+top.prototype.changeImageAction = changeImageAction;
+module.exports = top;

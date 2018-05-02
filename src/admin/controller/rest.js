@@ -1,90 +1,150 @@
 const assert = require('assert');
-
-module.exports = class extends think.Controller {
-  static get _REST() {
-    return true;
-  }
-
-  constructor(ctx) {
-    super(ctx);
-    this.resource = this.getResource();
-    this.id = this.getId();
-    console.log("id is _----------: ", this.id);
-    assert(think.isFunction(this.model), 'this.model must be a function');
-    this.modelInstance = this.model(this.resource);
-  }
-  __before() {}
+module.exports = function(modelName, columns) {return {
   /**
-   * get resource
-   * @return {String} [resource name]
+   * read request
+   * @return {Promise}
    */
-  getResource() {
-    return this.ctx.controller;
-  }
-  getId() {
-    const id = this.get('id');
-    if (id && (think.isString(id) || think.isNumber(id))) {
-      return id;
-    }
-    const last = this.ctx.path.split('/').slice(-1)[0];
-    if (last !== this.resource) {
-      return last;
-    }
-    return '';
-  }
-  async getAction() {
-    let data;
-    console.log("this.id is ", this.id)
-    if (this.id) {
-      const pk = this.modelInstance.pk;
-      data = await this.modelInstance.where({ [pk]: this.id }).find();
+  async readAction() {
+    console.log("this.get is ", this.get());
+    try{
+      const { id, key, value, page, pageSize, order } = this.get();
+      let data;
+      if(id && !value && !key) //按id查询
+      {
+        data = await this.model(modelName).field(columns).where({ id }).countSelect();
+      }
+      else if(!id && !value && !key) //批量查询
+      {
+        if(order) //按字段排序
+        {
+          data = await this.model(modelName).field(columns).order(order).page(page, pageSize).countSelect();
+        }
+        else if(!order) //默认排序
+        {
+          data = await this.model(modelName).field(columns).page(page, pageSize).countSelect();
+        }
+      }
+      else if(!id && value && key) //按KV查询
+      {
+        //筛选规则
+        const KV = {};
+        switch(key)
+        {
+          case "nickname":
+            //根据输入用户昵称查找用户id
+            const keys = await this.model("user").field("id").where({'nickname': ['like', '%' + value + '%']}).select();
+            
+            if(keys.length === 0) //没有查到用户id
+            {
+              data = await this.model(modelName).field(columns).where("0").page(page, pageSize).countSelect();
+            }
+            else if(keys.length !== 0) //根据用户id再次查询
+            {
+              KV["user_id"] = ["in", []];
+              keys.forEach(key => KV["user_id"][1].push(key["id"]));
+
+              if(order) //按字段排序
+              {
+                data = await this.model(modelName).field(columns).where(KV).order(order).page(page, pageSize).countSelect();
+              }
+              else if(!order) //默认排序
+              {
+                data = await this.model(modelName).field(columns).where(KV).page(page, pageSize).countSelect();
+              }
+            }
+            break;
+          default:
+            KV[key] = ['like', '%' + value + '%'];
+            if(order) //按字段排序
+            {
+              data = await this.model(modelName).field(columns).where(KV).order(order).page(page, pageSize).countSelect();
+            }
+            else if(!order) //默认排序
+            {
+              data = await this.model(modelName).field(columns).where(KV).page(page, pageSize).countSelect();
+            }
+            break;
+        }
+      }
+      if(data.data.length > 0 && typeof data.data[0].user_id === "number") //如果存在user_id就提取出昵称和头像
+      {
+        for(let item of data.data)
+        {
+          const user = await this.model("user").field("nickname, avatar").where({ id: item.user_id }).find();
+          item.nickname = user.nickname;
+          item.avatar = user.avatar;
+        }
+      }
       return this.success(data);
+    }catch(e){
+      console.log(e);
+      return this.fail(e);
     }
-    data = await this.modelInstance.select();
-    return this.success(data);
-  }
+
+  },
+
   /**
-   * put resource
-   * @return {Promise} []
+   * create request
+   * @return {Promise}
    */
-  async postAction() {
-    const pk = this.modelInstance.pk;
-    const data = this.post();
-    delete data[pk];
-    if (think.isEmpty(data)) {
-      return this.fail('data is empty');
-    }
-    const insertId = await this.modelInstance.add(data);
-    return this.success({ id: insertId });
-  }
+  async createAction() {
+    // return this.fail("can not create");
+    let result;
+    
+    result = await this.model(modelName).add({ 
+      ...this.post(), 
+      add_time: parseInt(new Date().getTime()/1000)
+    });
+    
+    return this.success(result);
+  },
+
   /**
-   * delete resource
-   * @return {Promise} []
+   * update request
+   * @return {Promise}
+   */
+  async updateAction() {
+    console.log("this.post is ", this.post());
+    const postBody = this.post();
+    const { id } = postBody;
+    delete postBody.id;
+
+    let data = await this.model(modelName).where({ id }).update(postBody);
+    
+    return this.success(data);
+  },
+
+  /**
+   * delete request
+   * @return {Promise}
    */
   async deleteAction() {
-    if (!this.id) {
-      return this.fail('params error');
-    }
-    const pk = this.modelInstance.pk;
-    const rows = await this.modelInstance.where({ [pk]: this.id }).delete();
-    return this.success({ affectedRows: rows });
-  }
+    // return this.fail("can not delete");
+    const postBody = this.post();
+    const { id } = postBody;
+
+    if(!id)
+      return this.fail("id is undefined");
+
+    let data = await this.model(modelName).where({ id }).delete();
+    
+    return this.success(data);
+  },
+
   /**
-   * update resource
+   * image action
    * @return {Promise} []
    */
-  async putAction() {
-    if (!this.id) {
-      return this.fail('params error');
-    }
-    const pk = this.modelInstance.pk;
-    const data = this.post();
-    delete data[pk];
-    if (think.isEmpty(data)) {
-      return this.fail('data is empty');
-    }
-    const rows = await this.modelInstance.where({ [pk]: this.id }).update(data);
-    return this.success({ affectedRows: rows });
+  async changeImageAction() {
+    const { id, column } = this.get();
+    //储存
+    const saveImgService = this.service('saveImg');
+    const { save_path, url } = saveImgService.save(this.file());
+    //入库
+    const updateObj = {};
+          updateObj[column] = url;
+    const result = await this.model(modelName).where({ id }).update(updateObj);
+    
+    return this.success('result');
   }
-  __call() {}
-};
+}};

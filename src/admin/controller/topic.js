@@ -1,6 +1,8 @@
 const Base = require('./base.js');
+const Rest = require('./rest.js');
+const { readAction, createAction, updateAction, deleteAction, changeImageAction } = Rest("topic");
 
-module.exports = class extends Base {
+class top extends Base {
   /**
    * index action
    * @return {Promise} []
@@ -52,3 +54,9 @@ module.exports = class extends Base {
     return this.success();
   }
 };
+top.prototype.readAction = readAction;
+top.prototype.createAction = createAction;
+top.prototype.updateAction = updateAction;
+top.prototype.deleteAction = deleteAction;
+top.prototype.changeImageAction = changeImageAction;
+module.exports = top;
