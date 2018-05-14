@@ -37,6 +37,7 @@ module.exports = class extends Base {
       console.log("统一下单返回：", returnParams);
       return this.success(returnParams);
     } catch (err) {
+      think.logger.warn('微信支付失败', err);
       return this.fail('微信支付失败');
     }
   }
@@ -54,11 +55,11 @@ module.exports = class extends Base {
     const orderInfo = await orderModel.getOrderByOrderSn(orderSn);
     think.logger.debug("result.out_trade_no is ", result.out_trade_no);
     think.logger.debug("orderInfo is ", orderInfo);
-    if (think.isEmpty(orderInfo) {
+    if (think.isEmpty(orderInfo)) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[订单不存在]]></return_msg></xml>`;
     }
 
-    if (think.isEmpty(orderInfo) {
+    if (think.isEmpty(orderInfo)) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[订单不存在]]></return_msg></xml>`;
     }
     orderInfo.pay_status == 1

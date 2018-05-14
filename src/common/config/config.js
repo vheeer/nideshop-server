@@ -5,9 +5,10 @@ const wxKey = "192006250b4c09247ec02edce69f6a2d";
 const myIp = "111.30.252.31";
 
 const partner_key = "dapingkejiviewdapingkejiviewdapi";
-let appid = "wx5efb8f7416263ee2";
-let secret = "c7923d89128f6f5deb4c039d1a1a254f";
-let mch_id = "1494794472";
+let appid = "wx2578c0e9c48ef707";
+// let secret = "c7923d89128f6f5deb4c039d1a1a254f";
+let secret = "bb60d9806b8d352ea66b8b7982ddb051"; //汽车
+let mch_id = "1503544101";
 let notify_url = "https://www.yinmudianying.club/nideshop/api/pay/notify";
 module.exports = {
   default_module: 'api',

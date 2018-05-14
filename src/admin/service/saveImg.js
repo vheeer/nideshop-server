@@ -1,4 +1,5 @@
 const fs = require('fs');
+console.log(think.Service);
 module.exports = class extends think.Service {
 	save(imageFile) {
 		//获取文件对象

@@ -139,6 +139,7 @@ module.exports = function(modelName, columns) {return {
     const { id, column } = this.get();
     //储存
     const saveImgService = this.service('saveImg');
+    console.log("saveImgService", saveImgService);
     const { save_path, url } = saveImgService.save(this.file());
     //入库
     const updateObj = {};
