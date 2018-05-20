@@ -48,7 +48,7 @@ module.exports = class extends Base {
   async changeImageAction() {
     const { categoryId, column } = this.get();
     //储存
-    const saveImgService = this.service('saveImg');
+    const saveImgService = this.service('saveimg');
     const { save_path, url } = saveImgService.save(this.file());
     //入库
     const updateObj = {};
@@ -93,10 +93,10 @@ module.exports = class extends Base {
   }
 
   async destoryAction() {
-    const id = this.post('id');
-    await this.model('category').where({id: id}).limit(1).delete();
+    const id = this.post('categoryId');
+    const result = await this.model('category').where({ id: id }).limit(1).delete();
     // TODO 删除图片
 
-    return this.success();
+    return this.success(result);
   }
 };

@@ -1,6 +1,6 @@
 const Base = require('./base.js');
 const Rest = require('./rest.js');
-const { readAction, createAction, updateAction, deleteAction, changeImageAction } = Rest("topic");
+const { readAction, createAction, updateAction, deleteAction, changeimgAction } = Rest("topic");
 
 class top extends Base {
   /**
@@ -58,5 +58,5 @@ top.prototype.readAction = readAction;
 top.prototype.createAction = createAction;
 top.prototype.updateAction = updateAction;
 top.prototype.deleteAction = deleteAction;
-top.prototype.changeImageAction = changeImageAction;
+top.prototype.changeimgAction = changeimgAction;
 module.exports = top;

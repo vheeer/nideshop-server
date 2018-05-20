@@ -1,6 +1,11 @@
 const _ = require('lodash');
 
-module.exports = class extends think.Model {
+export default class extends think.Model {
+  get relation() {
+    return {
+      order_goods: think.Model.HAS_MANY
+    };
+  }
   /**
    * 生成订单的编号order_sn
    * @returns {string}

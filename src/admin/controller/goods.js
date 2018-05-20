@@ -47,10 +47,37 @@ module.exports = class extends Base {
    */
   async postGoodsValuesAction() {
     const params = this.post();
-    const id = params.id;
+    const { id, retail_price } = params;
     delete params.id;
     const model = this.model('goods');
-    const result = await model.where({ id: id }).update(params);
+    const result = await model.where({ id }).update(params);
+    console.log(result);
+    // 添加产品（临时）
+    // const r = await this.model("goods").where({ category_id: ["IN", ["1036060", "1036065"]] }).select();
+    // console.log("r", r);
+    // for(const item of r) 
+    // {
+    //   const { id: sid, retail_price: xx } = item;
+    //   console.log(sid);
+    //   // 添加对应产品
+    //   const lastInserProductId = await this.model("product").add({
+    //     goods_id: sid,
+    //     goods_number: 9999,
+    //     goods_sn: sid,
+    //     goods_specification_ids: "",
+    //     retail_price: xx,
+    //     add_time: parseInt(Date.now()/1000)
+    //   });
+    // }
+
+    // 更改关联的产品价格（临时）
+    try{
+      if(retail_price)
+        await this.model("product").where({ goods_id: id }).update({ retail_price });
+    }catch(err){
+      console.log("postGoods err: ", err);
+      return this.fail(err);
+    }
     return this.success(result);
   }
   /**
@@ -64,8 +91,28 @@ module.exports = class extends Base {
     if(think.isEmpty(category_id)){
       return this.fail("未知分类");
     }
-    const lastInserId = await model.add({ name: "新商品", category_id, add_time: parseInt(new Date().getTime() / 1000) });
+    // 添加时间
+    const add_time = parseInt(new Date().getTime() / 1000);
+    // 添加商品，返回ID
+    const lastInserId = await model.add({ 
+      name: "新商品", 
+      category_id, 
+      add_time
+    });
     const result = await model.where({ id: lastInserId }).find();
+    const { retail_price } = result; 
+
+    // 添加对应产品
+    const lastInserProductId = await this.model("product").add({ 
+      goods_id: lastInserId,
+      goods_number: 9999,
+      goods_sn: lastInserId,
+      goods_specification_ids: "",
+      retail_price,
+      add_time
+    });
+    // 修改商品的默认产品ID
+    const result_1 = await model.where({ id: lastInserId }).update({ primary_product_id: lastInserProductId });
     
     return this.success(result);
   }
@@ -76,7 +123,7 @@ module.exports = class extends Base {
   async addGalleryAction() {
     const { goodsId, column } = this.get();
     //储存
-    const saveImgService = this.service('saveImg');
+    const saveImgService = this.service('saveimg');
     const { save_path, url } = saveImgService.save(this.file());
     //入库
     const updateObj = {};
@@ -133,5 +180,38 @@ module.exports = class extends Base {
     // TODO 删除图片
 
     return this.success();
+  }
+
+  /**
+   * image action
+   * @return {Promise} []
+   */
+  async changeImageAction() {
+    const { goodsId, column } = this.get();
+    //储存
+    const saveImgService = this.service('saveimg');
+    const { save_path, url } = saveImgService.save(this.file());
+    //入库
+    const updateObj = {};
+          updateObj[column] = url;
+    const result = await this.model('goods').where({ id: goodsId }).update(updateObj);
+    
+    return this.success(result);
+  }
+  /**
+   * delete request
+   * @return {Promise}
+   */
+  async deletegoodsAction() {
+    // return this.fail("can not delete");
+    const postBody = this.post();
+    const { goodsId: id } = postBody;
+
+    if(!id)
+      return this.fail("id is undefined");
+
+    let data = await this.model('goods').where({ id }).delete();
+    
+    return this.success(data);
   }
 };

@@ -91,7 +91,10 @@ module.exports = class extends Base {
     if(think.isEmpty(checkedAddress)) {
       return this.fail('请添加默认地址');
     }
-    const freightPrice = 0.00;
+
+    // 运费
+    const { freight } = await this.model('others').field("freight").limit(1).find();
+    const freightPrice = freight;
 
     //查找货物信息
     const checkedGoods = await this.model('goods').where({ id: goods_id }).find();
@@ -139,7 +142,7 @@ module.exports = class extends Base {
     }
 
     // 订单价格计算
-    const orderTotalPrice = goodsTotalPrice + freightPrice - couponPrice; // 订单的总价
+    const orderTotalPrice = parseFloat((goodsTotalPrice + freightPrice - couponPrice).toFixed(2)); // 订单的总价
     const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额
     const currentTime = parseInt(this.getTime());
 
@@ -154,7 +157,7 @@ module.exports = class extends Base {
       city: checkedAddress.city_id, 
       district: checkedAddress.district_id, 
       address: checkedAddress.address,  
-      freight_price: 0.00,  
+      freight_price: freightPrice,  
 
       // 留言
       postscript: this.post('postscript'),
@@ -188,7 +191,8 @@ module.exports = class extends Base {
       retail_price: checkedGoods.retail_price,
       number: checkedGoods.number,
       goods_specifition_name_value: goodsSepcifitionValue.join(";"),
-      goods_specifition_ids: checkedProduct.goods_specification_ids
+      goods_specifition_ids: checkedProduct.goods_specification_ids,
+      goods_unit: checkedGoods.goods_unit
     }
 
     await this.model('order_goods').add(orderGoodsData);
@@ -208,7 +212,9 @@ module.exports = class extends Base {
     if (think.isEmpty(checkedAddress)) {
       return this.fail('请选择收货地址');
     }
-    const freightPrice = 0.00;
+    // 运费
+    const { freight } = await this.model('others').field("freight").limit(1).find();
+    const freightPrice = freight;
 
     // 获取要购买的商品
     const checkedGoodsList = await this.model('cart').where({ user_id: think.userId, session_id: 1, checked: 1 }).select();
@@ -245,7 +251,7 @@ module.exports = class extends Base {
       city: checkedAddress.city_id,
       district: checkedAddress.district_id,
       address: checkedAddress.address,
-      freight_price: 0.00,
+      freight_price: freightPrice,
 
       // 留言
       postscript: this.post('postscript'),
@@ -270,6 +276,7 @@ module.exports = class extends Base {
     // 插入订单关联的商品信息
     const orderGoodsData = [];
     for (const goodsItem of checkedGoodsList) {
+      const { goods_unit } = await this.model("goods").field("goods_unit").where({ id: goodsItem.goods_id }).find();
       orderGoodsData.push({
         order_id: orderId,
         goods_id: goodsItem.goods_id,
@@ -281,7 +288,8 @@ module.exports = class extends Base {
         retail_price: goodsItem.retail_price,
         number: goodsItem.number,
         goods_specifition_name_value: goodsItem.goods_specifition_name_value,
-        goods_specifition_ids: goodsItem.goods_specifition_ids
+        goods_specifition_ids: goodsItem.goods_specifition_ids,
+        goods_unit
       });
     }
 

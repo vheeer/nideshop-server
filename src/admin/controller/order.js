@@ -4,9 +4,8 @@ const { readAction, createAction, updateAction, deleteAction, changeImageAction 
 
 class top extends Base {
   async indexAction() {
-    console.log("this.ctx: ", this.ctx);
-    console.log("this: ", this.get('id'));
-    return this.success("success to option");
+    console.log("think.Model.relation", Object.keys(think.model));
+    return this.success(Object.keys(think.Model));
   }
 
   /**
@@ -93,7 +92,8 @@ class top extends Base {
         retail_price: goodsItem.retail_price,
         number: goodsItem.number,
         goods_specifition_name_value: goodsItem.goods_specifition_name_value,
-        goods_specifition_ids: goodsItem.goods_specifition_ids
+        goods_specifition_ids: goodsItem.goods_specifition_ids,
+        goods_unit: goodsItem.goods_unit
       });
     }
 

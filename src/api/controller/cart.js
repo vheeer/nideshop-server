@@ -255,7 +255,7 @@ module.exports = class extends Base {
     }
 
     // 根据收货地址计算运费
-    const freightPrice = 0.00;
+    const { freight: freightPrice } = await this.model('others').field("freight").limit(1).find();
 
     // 获取要购买的商品
     const cartData = await this.getCart();

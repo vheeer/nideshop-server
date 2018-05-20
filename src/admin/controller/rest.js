@@ -75,6 +75,15 @@ module.exports = function(modelName, columns) {return {
           item.avatar = user.avatar;
         }
       }
+      //过滤敏感字段
+      if(data.data.length > 0)
+      {
+        for(let item of data.data)
+        {
+          delete item["session_key"];
+          delete item["openid"];
+        }
+      }
       return this.success(data);
     }catch(e){
       console.log(e);
@@ -130,22 +139,51 @@ module.exports = function(modelName, columns) {return {
     
     return this.success(data);
   },
-
+  async testAction() {
+    const service = this.service('saveimg');
+    console.log("new service.a", service.save);
+    return this.success("result");
+  },
   /**
    * image action
    * @return {Promise} []
    */
-  async changeImageAction() {
+  async changeimgAction() {
     const { id, column } = this.get();
     //储存
-    const saveImgService = this.service('saveImg');
-    console.log("saveImgService", saveImgService);
-    const { save_path, url } = saveImgService.save(this.file());
+    const service = this.service('saveimg');
+    const { save_path, url } = service.save(this.file());
     //入库
     const updateObj = {};
           updateObj[column] = url;
     const result = await this.model(modelName).where({ id }).update(updateObj);
     
-    return this.success('result');
+    return this.success(result);
+  },
+  /**
+   * getcolumn action
+   * @return {Promise} []
+   */
+  async readcolumnAction() {
+    const model = this.model(modelName);
+    const { tablePrefix } = model;
+    const result = await model.query("desc " + tablePrefix + modelName);
+    return this.success(result);
+  },
+  /**
+   * sortcolumn action
+   * @return {Promise} []
+   */
+  async changecolumnAction() {
+    const { id, column } = this.post();
+    //储存
+    const service = this.service('saveimg');
+    const { save_path, url } = service.save(this.file());
+    //入库
+    const updateObj = {};
+          updateObj[column] = url;
+    const result = await this.model(modelName).where({ id }).update(updateObj);
+    
+    return this.success(result);
   }
 }};

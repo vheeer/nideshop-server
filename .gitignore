@@ -35,3 +35,6 @@ app/
 
 config.development.js
 adapter.development.js
+
+# static upload
+www/static/upload

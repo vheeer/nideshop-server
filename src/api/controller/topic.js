@@ -3,7 +3,7 @@ const Base = require('./base.js');
 module.exports = class extends Base {
   async listAction() {
     const model = this.model('topic');
-    const data = await model.field(['id', 'title', 'price_info', 'scene_pic_url', 'subtitle']).page(this.get('page') || 1, this.get('size') || 10).countSelect();
+    const data = await model.field(['id', 'title', 'price_info', 'scene_pic_url', 'subtitle']).where({ is_show: 1 }).page(this.get('page') || 1, this.get('size') || 10).countSelect();
 
     return this.success(data);
   }
@@ -17,7 +17,7 @@ module.exports = class extends Base {
 
   async relatedAction() {
     const model = this.model('topic');
-    const data = await model.field(['id', 'title', 'price_info', 'scene_pic_url', 'subtitle']).limit(4).select();
+    const data = await model.field(['id', 'title', 'price_info', 'scene_pic_url', 'subtitle']).where({ is_show: 1 }).limit(4).select();
 
     return this.success(data);
   }

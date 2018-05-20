@@ -3,7 +3,7 @@ const Base = require('./base.js');
 module.exports = class extends Base {
   async listAction() {
     const model = this.model('brand');
-    const data = await model.field(['id', 'name', 'floor_price', 'app_list_pic_url']).where({ is_show: 1 }).page(this.get('page') || 1, this.get('size') || 10).countSelect();
+    const data = await model.where({ is_show: 1 }).page(this.get('page') || 1, this.get('size') || 10).countSelect();
 
     return this.success(data);
   }

@@ -33,7 +33,7 @@ module.exports = class extends Base {
     const info = await model.where({'id': goodsId}).find();
     const gallery = await this.model('goods_gallery').where({goods_id: goodsId}).limit(4).select();
     const attribute = await this.model('goods_attribute').field('nideshop_goods_attribute.value, nideshop_attribute.name').join('nideshop_attribute ON nideshop_goods_attribute.attribute_id=nideshop_attribute.id').order({'nideshop_goods_attribute.id': 'asc'}).where({'nideshop_goods_attribute.goods_id': goodsId}).select();
-    const issue = await this.model('goods_issue').select();
+    const issue = await this.model('goods_issue').where({goods_id: goodsId}).select();
     const brand = await this.model('brand').where({id: info.brand_id}).find();
     const commentCount = await this.model('comment').where({value_id: goodsId, type_id: 0}).count();
     const hotComment = await this.model('comment').where({value_id: goodsId, type_id: 0}).order('id desc').find();
@@ -130,6 +130,9 @@ module.exports = class extends Base {
     if (!think.isEmpty(brandId)) {
       whereMap.brand_id = brandId;
     }
+
+    // 只显示在售
+    whereMap.is_on_sale = 1;
 
     // 排序
     let orderMap = {};
@@ -234,11 +237,12 @@ module.exports = class extends Base {
    * @returns {Promise.<Promise|void|PreventPromise>}
    */
   async newAction() {
+    const { new_goods_title, new_goods_bannar_url } = await this.model("others").limit(1).find();
     return this.success({
       bannerInfo: {
-        url: '',
-        name: '坚持初心，为你寻觅世间好物',
-        img_url: 'http://yanxuan.nosdn.127.net/8976116db321744084774643a933c5ce.png'
+        url: new_goods_bannar_url,
+        name: new_goods_title,
+        img_url: new_goods_bannar_url
       }
     });
   }
@@ -248,11 +252,12 @@ module.exports = class extends Base {
    * @returns {Promise.<Promise|void|PreventPromise>}
    */
   async hotAction() {
+    const { hot_goods_title, hot_goods_bannar_url } = await this.model("others").limit(1).find();
     return this.success({
       bannerInfo: {
-        url: '',
-        name: '大家都在买的严选好物',
-        img_url: 'http://yanxuan.nosdn.127.net/8976116db321744084774643a933c5ce.png'
+        url: hot_goods_bannar_url,
+        name: hot_goods_title,
+        img_url: hot_goods_bannar_url
       }
     });
   }
@@ -270,7 +275,7 @@ module.exports = class extends Base {
     if (think.isEmpty(relatedGoodsIds)) {
       // 查找同分类下的商品
       const goodsCategory = await model.where({id: goodsId}).find();
-      relatedGoods = await model.where({category_id: goodsCategory.category_id}).field(['id', 'name', 'list_pic_url', 'retail_price']).limit(8).select();
+      relatedGoods = await model.where({category_id: goodsCategory.category_id}).field(['id', 'name', 'list_pic_url', 'retail_price']).limit(4).select();
     } else {
       relatedGoods = await model.where({id: ['IN', relatedGoodsIds]}).field(['id', 'name', 'list_pic_url', 'retail_price']).select();
     }
