@@ -9,7 +9,7 @@ class controller extends Base {
    * @return {Promise} []
    */
   async indexAction(){
-    //auto render template file index_index.html
+    //auto render template file index_index.htm
     const result = await this.model(namespace).limit(10).select();
     return this.success(result);
   }
