@@ -23,7 +23,9 @@
     "think-model": "^1.0.0",
     "think-model-mysql": "^1.0.0",
     "thinkjs": "^3.0.0",
+    "wechat-payment-node": "^2.8.0",
     "weixinpay": "^1.0.12",
+    "wx-payment": "^1.1.0",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {

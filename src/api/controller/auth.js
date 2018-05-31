@@ -5,9 +5,13 @@ module.exports = class extends Base {
   async loginByWeixinAction() {
     console.log("this.post(): ", this.post());
     const code = this.post('code');
+    const { mch } = this.get();
     const fullUserInfo = this.post('userInfo');
     const userInfo = fullUserInfo.userInfo;
     const clientIp = ''; // 暂时不记录 ip
+
+    const { app_secret, appid } = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
+    console.log("{ app_secret, appid }", app_secret, appid);
 
     // 获取openid
     const options = {
@@ -16,8 +20,8 @@ module.exports = class extends Base {
       qs: {
         grant_type: 'authorization_code',
         js_code: code,
-        secret: think.config('weixin.secret'),
-        appid: think.config('weixin.appid')
+        secret: app_secret,
+        appid
       }
     };
 
@@ -35,7 +39,9 @@ module.exports = class extends Base {
     }
 
     // 解释用户数据
-    const WeixinSerivce = this.service('weixin', 'api');
+    const WeixinSerivce = this.service('weixin', 'api', { app_secret, appid });
+    console.log("WeixinSerivce", WeixinSerivce);
+    console.log("typeof WeixinSerivce", typeof WeixinSerivce);
     const weixinUserInfo = await WeixinSerivce.decryptUserInfoData(sessionData.session_key, fullUserInfo.encryptedData, fullUserInfo.iv);
     if (think.isEmpty(weixinUserInfo)) {
       return this.fail('think.isEmpty(weixinUserInfo)登录失败');

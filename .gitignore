@@ -38,3 +38,7 @@ adapter.development.js
 
 # static upload
 www/static/upload
+
+# others
+package-lock.json
+local/

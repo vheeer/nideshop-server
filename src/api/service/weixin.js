@@ -2,6 +2,12 @@ const crypto = require('crypto');
 const md5 = require('md5');
 
 module.exports = class extends think.Service {
+
+  constructor(params) {
+    super();
+    console.log("params:-_----------------------", params);
+    Object.assign(this, params);
+  }
   /**
    * 解析微信登录用户数据
    * @param sessionKey
@@ -11,6 +17,7 @@ module.exports = class extends think.Service {
    */
   async decryptUserInfoData(sessionKey, encryptedData, iv) {
     // base64 decode
+    const { appid } = this;
     const _sessionKey = Buffer.from(sessionKey, 'base64');
     encryptedData = Buffer.from(encryptedData, 'base64');
     iv = Buffer.from(iv, 'base64');
@@ -28,7 +35,7 @@ module.exports = class extends think.Service {
       return '';
     }
 
-    if (decoded.watermark.appid !== think.config('weixin.appid')) {
+    if (decoded.watermark.appid !== appid) {
       return '';
     }
 
@@ -40,19 +47,21 @@ module.exports = class extends think.Service {
    * @param payInfo
    * @returns {Promise}
    */
-  createUnifiedOrder(payInfo) {
+  async createUnifiedOrder(payInfo) {
     const WeiXinPay = require('weixinpay');
+    const { appid, app_secret, mch_id, partner_key } = this;
+    // 参数
     const weixinpay = new WeiXinPay({
-      appid: think.config('weixin.appid'), // 微信小程序appid
+      appid, // 微信小程序appid
       openid: payInfo.openid, // 用户openid
-      mch_id: think.config('weixin.mch_id'), // 商户帐号ID
-      partner_key: think.config('weixin.partner_key') // 秘钥
+      mch_id, // 商户帐号ID
+      partner_key // 秘钥
     });
     console.log("params: ", {
-      appid: think.config('weixin.appid'), // 微信小程序appid
+      appid, // 微信小程序appid 
       openid: payInfo.openid, // 用户openid
-      mch_id: think.config('weixin.mch_id'), // 商户帐号ID
-      partner_key: think.config('weixin.partner_key') // 秘钥
+      mch_id, // 商户帐号ID
+      partner_key // 秘钥
     })
     return new Promise((resolve, reject) => {
       weixinpay.createUnifiedOrder({
@@ -71,10 +80,10 @@ module.exports = class extends think.Service {
             'package': 'prepay_id=' + res.prepay_id,
             'signType': 'MD5'
           };
-          const paramStr = `appId=${returnParams.appid}&nonceStr=${returnParams.nonceStr}&package=${returnParams.package}&signType=${returnParams.signType}&timeStamp=${returnParams.timeStamp}&key=` + think.config('weixin.partner_key');
+          const paramStr = `appId=${returnParams.appid}&nonceStr=${returnParams.nonceStr}&package=${returnParams.package}&signType=${returnParams.signType}&timeStamp=${returnParams.timeStamp}&key=` + partner_key;
           returnParams.paySign = md5(paramStr).toUpperCase();
           resolve(returnParams);
-        } else {
+        } else { 
           reject(res);
         }
       });

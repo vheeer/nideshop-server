@@ -7,7 +7,7 @@ module.exports = class extends Base {
    * @returns {Promise<PreventPromise|void|Promise>}
    */
   async prepayAction() {
-    const orderId = this.get('orderId');
+    const { orderId, mch } = this.get();
 
     const orderInfo = await this.model('order').where({ id: orderId }).find();
     if (think.isEmpty(orderInfo)) {
@@ -21,7 +21,8 @@ module.exports = class extends Base {
       think.logger.warn('找不到openid');
       return this.fail('微信支付失败');
     }
-    const WeixinSerivce = this.service('weixin', 'api');
+    const params = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
+    const WeixinSerivce = this.service('weixin', 'api', params);
     try {
       //统一下单
       const outTradeNo = orderInfo.order_sn + "" + Math.round(new Date().getTime()/1000);
@@ -104,16 +105,22 @@ module.exports = class extends Base {
   }
 
   async notifyAction() {
-    const WeixinSerivce = this.service('weixin', 'api');
+    console.log("----------------weixin notify----------------");
+    let WeixinSerivce = this.service('weixin', 'api');
     const result = WeixinSerivce.payNotify(this.post('xml'));
     think.logger.debug("notify post XML", result);
     if (!result) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[支付失败]]></return_msg></xml>`;
     }
-
-    const orderModel = this.model('order');
+    const { mch_id } = result;
+    // WeixinSerivce = this.service('weixin', 'api', { mch_id });
+    const params = await this.model("account", "mch").where({ mch_id }).limit(1).find();
+    console.log("params", params);
+    const { acc } = params;
+    const orderModel = this.model('order', acc);
     const orderSn = result.out_trade_no.substring(0, 20);
     const orderInfo = await orderModel.getOrderByOrderSn(orderSn);
+
     think.logger.debug("result.out_trade_no is ", result.out_trade_no);
     think.logger.debug("orderInfo is ", orderInfo);    // 如果已经收到支付成功该信息则返回错误
 
