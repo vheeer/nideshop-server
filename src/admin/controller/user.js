@@ -1,7 +1,7 @@
 const Base = require('./base.js');
 const Rest = require('./rest.js');
 //指定需要查询的字段
-const columns = ["id", "username", "gender", "birthday", "register_time", "last_login_time", "last_login_ip", "user_level_id", "nickname", "mobile", "register_ip", "avatar"];
+const columns = ["id", "username", "gender", "birthday", "register_time", "last_login_time", "last_login_ip", "user_level_id", "nickname", "mobile", "register_ip", "avatar", "cash_paid", "is_distributor", "referee"];
 const { readAction, createAction, updateAction, deleteAction, changeImageAction } = Rest("user", columns);
 
 class top extends Base {

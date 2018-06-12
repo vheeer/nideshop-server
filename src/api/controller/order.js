@@ -86,6 +86,8 @@ module.exports = class extends Base {
     // 获取收货地址信息和计算运费
     console.log("quickbuyAction post: ", this.post());
     const { goodsId: goods_id, productId: purduct_id, number, addressId: address_id } = this.post();
+    const { referee } = await this.model("user").where({ id: think.userId }).find();
+    const { is_contribute } = await this.model("others").limit(1).find();
 
     const checkedAddress = await this.model('address').where({ user_id: think.userId, id: address_id }).find();
     if(think.isEmpty(checkedAddress)) {
@@ -169,7 +171,10 @@ module.exports = class extends Base {
       add_time: currentTime,
       goods_price: goodsTotalPrice,
       order_price: orderTotalPrice,
-      actual_price: actualPrice
+      actual_price: actualPrice,
+
+      // 推荐人
+      referee: is_contribute?referee:null
     };
 
     // 开启事务，插入订单信息和订单商品
@@ -207,7 +212,9 @@ module.exports = class extends Base {
    */
   async submitAction() {
     // 获取收货地址信息和计算运费
-    const addressId = this.post('addressId');
+    const { addressId } = this.post();
+    const { referee } = await this.model("user").where({ id: think.userId }).find();
+    const { is_contribute } = await this.model("others").limit(1).find();
     const checkedAddress = await this.model('address').where({ id: addressId }).find();
     if (think.isEmpty(checkedAddress)) {
       return this.fail('请选择收货地址');
@@ -263,7 +270,9 @@ module.exports = class extends Base {
       add_time: currentTime,
       goods_price: goodsTotalPrice,
       order_price: orderTotalPrice,
-      actual_price: actualPrice
+      actual_price: actualPrice,
+
+      referee: is_contribute?referee:null
     };
 
     // 开启事务，插入订单信息和订单商品

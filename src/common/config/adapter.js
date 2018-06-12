@@ -91,7 +91,29 @@ exports.model = {
   },
   bishuiyuan: {
     handle: mysql,
-    database: 'nideshop_dapingkeji',
+    database: 'nideshop_bishuiyuan',
+    prefix: 'nideshop_',
+    encoding: 'utf8mb4',
+    host: '127.0.0.1',
+    port: '3306',
+    user: 'root',
+    password: ';Classmate1133',
+    dateStrings: true
+  },
+  jiaju: {  
+    handle: mysql,
+    database: 'nideshop_jiaju',
+    prefix: 'nideshop_',
+    encoding: 'utf8mb4',
+    host: '127.0.0.1',
+    port: '3306',
+    user: 'root',
+    password: ';Classmate1133',
+    dateStrings: true
+  },
+  haixin: {  
+    handle: mysql,
+    database: 'nideshop_haixin',
     prefix: 'nideshop_',
     encoding: 'utf8mb4',
     host: '127.0.0.1',

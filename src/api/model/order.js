@@ -49,12 +49,13 @@ module.exports = class extends think.Model {
 
     // 如果订单已付款，没有发货，则可退款操作
     if (orderInfo.order_status === 201) {
-      // handleOption.return = true;
+      handleOption.return = true;
     }
 
     // 如果订单已经发货，没有收货，则可收货操作和退款、退货操作
     if (orderInfo.order_status === 300) {
       handleOption.confirm = true;
+      handleOption.return = true;
     }
 
     // 如果订单已经支付，且已经收货，则可完成交易、评论和再次购买
@@ -62,6 +63,7 @@ module.exports = class extends think.Model {
       handleOption.delete = true;
       handleOption.comment = true;
       handleOption.buy = true;
+      handleOption.return = true;
     }
 
     return handleOption;

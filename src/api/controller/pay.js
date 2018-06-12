@@ -117,7 +117,12 @@ module.exports = class extends Base {
     const params = await this.model("account", "mch").where({ mch_id }).limit(1).find();
     console.log("params", params);
     const { acc } = params;
+    // 已确定的商户模型
     const orderModel = this.model('order', acc);
+    const userModel = this.model('user', acc);
+    const othersModel = this.model('others', acc);
+    const distribute_commisionModel = this.model('distribute_commision', acc);
+
     const orderSn = result.out_trade_no.substring(0, 20);
     const orderInfo = await orderModel.getOrderByOrderSn(orderSn);
 
@@ -141,6 +146,72 @@ module.exports = class extends Base {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[订单不存在]]></return_msg></xml>`;
     }
 
+    // 分销佣金处理
+    const { id: order_id, referee: referee_1, actual_price } = orderInfo;
+    const { is_distribute, first_commision, second_commision } = await othersModel.limit(1).find(0); //佣金比例
+    if(is_distribute === 0)
+    {
+      // 关闭分销功能--不返佣
+      if(referee_1 === null || referee_1 === 0){
+        // 订单不参与分销或一级推荐人是总店--不返佣
+      }else{
+        const { is_distributor: referee_1_is_distributor, referee: referee_2, balance: balance_1 } = await userModel.where({ id: referee_1 }).find(); //一级推荐人
+        if(referee_1_is_distributor === 0){
+          // 一级推荐人不是分销商--不返佣
+        }else if(referee_1_is_distributor === 1){
+          // 一级推荐人是分销商--一级返佣
+          const add_commsion_1 = parseFloat((actual_price * (first_commision/100)).toFixed(2));
+          const new_balance_1 = parseFloat((balance_1 + add_commsion_1).toFixed(2));
+          const add_balance_result_1 = await userModel.where({ id: referee_1 }).update({ balance: new_balance_1 }); //返佣
+          const add_commsion_result_1 = await distribute_commisionModel.add({
+            user_id: referee_1, 
+            commsion_price: add_commsion_1, 
+            level: 1, 
+            add_time: parseInt(Date.now()/1000),
+            order_id
+          }); //返佣记录
+          if(referee_2 === 0){
+            // 二级推荐人是总店--不返佣
+          }else{
+            const { is_distributor: referee_2_is_distributor, referee: referee_3, balance: balance_2 } = await userModel.where({ id: referee_2 }).find(); //二级推荐人
+            if(referee_2_is_distributor === 0){
+              // 二级推荐人不是分销商（不可能发生）--不返佣
+            }else if(referee_2_is_distributor === 1){
+              // 二级推荐人是分销商--二级返佣
+              const add_commsion_2 = parseFloat((actual_price * (second_commision/100)).toFixed(2));
+              const new_balance_2 = parseFloat((balance_2 + add_commsion_2).toFixed(2));
+              const add_balance_result_2 = await userModel.where({ id: referee_2 }).update({ balance: new_balance_2 }); //返佣
+              const add_commsion_result_2 = await distribute_commisionModel.add({
+                user_id: referee_2, 
+                commsion_price: add_commsion_2, 
+                level: 2, 
+                add_time: parseInt(Date.now()/1000),
+                order_id
+              }); //返佣记录
+            }
+          }
+        }
+      }
+    }
+
+    // if(referee === null){
+    //   // 推荐人为总店
+
+    // }else{
+    //   const { first_commision, second_commision } = await othersModel.limit(1).find(0); //佣金比例
+    //   const { referee: referee_1, balance: balance_1 } = await userModel.where({ id: referee }).find(); //一级分销商
+    //   const new_balance_1 = parseFloat((balance_1 + actual_price * (first_commision/100)).toFixed(2));
+    //   const add_balance_result_1 = await userModel.where({ id: referee_1 }).update({ balance: new_balance_1 }); //积攒佣金
+    //   if(referee_1 === null){
+    //     // 不存在二级分销商
+    //   }else{
+    //     const { referee: referee_2, balance: balance_2 } = await userModel.where({ id: referee_1 }).find(); //二级分销商
+    //     const new_balance_2 = parseFloat((balance_2 + actual_price * (second_commision/100)).toFixed(2));
+    //     const add_balance_result_2 = await userModel.where({ id: referee_2 }).update({ balance: new_balance_2 }); //积攒佣金
+    //   }
+    // }
+
     return `<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>`;
   }
+
 };

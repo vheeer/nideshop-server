@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const md5 = require('md5');
+const rp = require('request-promise');
 
 module.exports = class extends think.Service {
 
@@ -147,5 +148,48 @@ module.exports = class extends think.Service {
       return false;
     }
     return notifyObj;
+  }
+
+  /**
+   * get_access_token
+   * @param 
+   * @returns {{}}
+   */
+  async get_access_token() {
+    const options = {
+      method: 'GET',
+      url: 'https://api.weixin.qq.com/cgi-bin/token',
+      qs: {
+        grant_type: 'client_credential',
+        secret: this.app_secret,
+        appid: this.appid
+      }
+    };
+    let result = await rp(options);
+    console.log("获取的token: ", result);
+    result = JSON.parse(result);
+    const { access_token } = result;
+    
+    return access_token;
+  }  
+
+  /**
+   * get_code
+   * @param
+   * @returns {{}}
+   */
+  async get_code(access_token) {
+    const options = {
+      method: 'POST',
+      url: 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' + access_token,
+      body: {
+        scene: "abcdef",
+        auto_color: true
+      },
+      json: true // Automatically stringifies the body to JSON
+    };
+    let result = await rp(options);
+    
+    return result;
   }
 };
