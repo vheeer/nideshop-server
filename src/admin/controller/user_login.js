@@ -49,7 +49,7 @@ class controller extends Base {
         }catch(e){
             console.log("add_admin_record err: ", e);
         }
-        return this.success({ mes: "success" });
+        return this.success({ mes: "success", data: { userName, id }});
     }else{
         this.ctx.cookies.set('login', '0', { maxAge: 3600*24*1*1000, httpOnly: false });
         this.ctx.cookies.set('userName', "userName", { maxAge: -3600*24*1*1000, httpOnly: false });

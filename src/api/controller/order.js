@@ -329,6 +329,26 @@ module.exports = class extends Base {
   }
 
   /**
+   * 删除订单
+   * @returns {Promise.<boolean>}
+   */
+  async deleteAction() {
+    const orderId = this.get('orderId');
+    const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
+
+    if(think.isEmpty(orderInfo)){
+      return this.fail('订单不存在');
+    }
+
+    const row = await this.model('order').updateOrderStatus(orderId, 102);
+    if(row > 0){
+      return this.success('success');
+    }else{
+       return this.fail('fail');
+    }
+  }
+
+  /**
    * 确认收货
    * @returns {Promise.<boolean>}
    */
@@ -340,11 +360,34 @@ module.exports = class extends Base {
       return this.fail('订单不存在');
     }
 
-    const row = await this.model('order').updateOrderStatus(orderId, 301);
-    if(row > 0){
+    const order_result = await this.model('order').updateOrderStatus(orderId, 301);
+    const shipping_result = await this.model('order').where({ id: orderId }).update({ shipping_status: 2 });
+    if(order_result > 0 && shipping_result > 0){
       return this.success('success');
     }else{
       return this.fail('fail');
+    }
+  }
+
+  /**
+   * 申请退款
+   * @returns {Promise.<boolean>}
+   */
+  async refundAction() {
+    const orderId = this.get('orderId');
+    const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
+
+    if(think.isEmpty(orderInfo)){
+      return this.fail('订单不存在');
+    }
+    if(orderInfo.order_status === 301){
+      return this.fail('已发货，不能退款');
+    }
+    const row = await this.model('order').where({ id: orderId }).update({ order_status: 401 });
+    if(row > 0){
+      return this.success('success');
+    }else{
+       return this.fail('fail');
     }
   }
 

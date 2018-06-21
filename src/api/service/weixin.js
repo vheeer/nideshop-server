@@ -71,7 +71,8 @@ module.exports = class extends think.Service {
         total_fee: payInfo.total_fee,
         spbill_create_ip: payInfo.spbill_create_ip,
         notify_url: think.config('weixin.notify_url'),
-        trade_type: 'JSAPI'
+        trade_type: 'JSAPI',
+        attach: payInfo.attach
       }, (res) => {
         if (res.return_code === 'SUCCESS' && res.result_code === 'SUCCESS') {
           const returnParams = {

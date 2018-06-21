@@ -15,6 +15,10 @@ module.exports = class extends think.Controller {
     const id = this.ctx.cookies.get("id");
     const login = this.ctx.cookies.get("login");
 
+    console.log("COOKIES userName: ", this.ctx.cookies.get("userName"));
+    console.log("COOKIES id: ", this.ctx.cookies.get("id"));
+    console.log("COOKIES login: ", this.ctx.cookies.get("login"));
+
     // console.log("this.model", this.model);
     // console.log("typeof this.model", typeof this.model);
     // console.log("Object.keys(this.model)", Object.keys(this.model));

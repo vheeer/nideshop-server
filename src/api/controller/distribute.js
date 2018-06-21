@@ -28,50 +28,30 @@ module.exports = class extends Base {
   	};
   	console.log("微信支付参数: ", options);
 
-	WechatPayment.init(options);
+  	WechatPayment.init(options);
 
-	let orderData = {
-	  partner_trade_no: parseInt(Math.random() * 100000000), //商户订单号，需保持唯一性
-	  openid,
-	  check_name: 'OPTION_CHECK',
-	  re_user_name: real_name,
-	  amount,
-	  desc: '付款',
-	  spbill_create_ip: '192.168.0.1'
-	}
-	console.log("退款订单：", orderData);
+  	let orderData = {
+  	  partner_trade_no: parseInt(Math.random() * 100000000), //商户订单号，需保持唯一性
+  	  openid,
+  	  check_name: 'OPTION_CHECK',
+  	  re_user_name: real_name,
+  	  amount,
+  	  desc: '付款',
+  	  spbill_create_ip: '192.168.0.1'
+  	}
+  	console.log("退款订单：", orderData);
 
-	// ES6
-	WechatPayment.transfers_promise = orderData => new Promise((resolve, reject) =>
-		WechatPayment.transfers(orderData, function(err, result){
-		  if(err)
-		  	reject(err);
-		  resolve(result);
-		})
-	);
-
-	// WechatPayment.transfers_promise(orderData)
-	// .then(result => {
-	// 	console.log("退款结果", result);
- //    	return this.success("success");
-	// })
-	// .catch(err => {
-	// 	console.log("错误：", err);
- //    	return this.success("success");
- //    });
-	
-	const result = await WechatPayment.transfers_promise(orderData);
-	console.log(result);
-	return this.success("success");
-	// ES6
-	// wechatPaymentInstance.transfers(orderData)
-	// .then(result=>{
-	//   console.log("result", result);
-	// })
-	// .catch(err=>{
-	//   console.log("err", err);
-	// });
-
+  	// ES6
+  	WechatPayment.transfers_promise = orderData => new Promise((resolve, reject) =>
+  		WechatPayment.transfers(orderData, function(err, result){
+  		  if(err)
+  		  	reject(err);
+  		  resolve(result);
+  		})
+  	);
+  	const result = await WechatPayment.transfers_promise(orderData);
+  	console.log(result);
+  	return this.success("success");
   }
 /*
   async applyAction(){

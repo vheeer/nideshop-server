@@ -33,7 +33,8 @@ module.exports = class extends Base {
         body: '商户订单：' + orderInfo.order_sn,
         out_trade_no: outTradeNo,
         total_fee: parseInt(orderInfo.actual_price * 100),
-        spbill_create_ip: ''
+        spbill_create_ip: '',
+        attach: mch
       });
       console.log("统一下单返回：", returnParams);
       return this.success(returnParams);
@@ -112,11 +113,11 @@ module.exports = class extends Base {
     if (!result) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[支付失败]]></return_msg></xml>`;
     }
-    const { mch_id } = result;
+    const { attach: acc } = result;
     // WeixinSerivce = this.service('weixin', 'api', { mch_id });
-    const params = await this.model("account", "mch").where({ mch_id }).limit(1).find();
-    console.log("params", params);
-    const { acc } = params;
+    // const params = await this.model("account", "mch").where({ mch_id }).limit(1).find();
+    console.log("acc: ", acc);
+    // const { acc } = params;
     // 已确定的商户模型
     const orderModel = this.model('order', acc);
     const userModel = this.model('user', acc);

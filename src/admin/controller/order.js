@@ -108,13 +108,49 @@ class top extends Base {
    * @returns {Promise.<void>}
    */
   async shippedAction() {
-    const orderId = this.post('orderId');
+    const orderId = this.post('id');
     const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');
     }
-    const result = await this.model('order').updateOrderStatus( orderId, 300 );
-    if(result > 0)
+    const order_result = await this.model('order').updateOrderStatus( orderId, 300 );
+    const shipping_result = await this.model('order').where({ id: orderId }).update({ shipping_status: 1 });
+    console.log("确认发货结果", shipping_result);
+    if(order_result > 0 && shipping_result > 0)
+      this.success({ mes: "success" });
+    else
+      this.fail({ mes: "fail" });
+  }
+   /**
+   * 拒绝退款
+   * @returns {Promise.<void>}
+   */
+  async refuserefundAction() {
+    const orderId = this.post('id');
+    const orderInfo = await this.model('order').where({ id: orderId }).find();
+    if(think.isEmpty(orderInfo)){
+      return this.fail('订单不存在');
+    }
+
+    const { shipping_status } = orderInfo;
+    let order_status;
+    switch(shipping_status)
+    {
+      case 0:
+        order_status = 201;
+        break;
+      case 1:
+        order_status = 300;
+        break;
+      case 2:
+        order_status = 301;
+        break;
+      default:
+        break;
+    }
+    const order_result = await this.model('order').where({ id: orderId }).update({ order_status });
+
+    if(order_result > 0)
       this.success({ mes: "success" });
     else
       this.fail({ mes: "fail" });

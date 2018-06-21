@@ -121,6 +121,17 @@ exports.model = {
     user: 'root',
     password: ';Classmate1133',
     dateStrings: true
+  },
+  bishuiyuan_huoke: {  
+    handle: mysql,
+    database: 'nideshop_bishuiyuan_huoke',
+    prefix: 'nideshop_',
+    encoding: 'utf8mb4',
+    host: '127.0.0.1',
+    port: '3306',
+    user: 'root',
+    password: ';Classmate1133',
+    dateStrings: true
   }
 };
 
