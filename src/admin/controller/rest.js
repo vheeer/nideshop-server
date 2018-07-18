@@ -66,22 +66,22 @@ module.exports = function(modelName, columns) {return {
             break;
         }
       }
-      if(data.data.length > 0 && typeof data.data[0].user_id === "number") //如果存在user_id就提取出昵称和头像
-      {
-        for(let item of data.data)
-        {
-          const user = await this.model("user").field("nickname, avatar").where({ id: item.user_id }).find();
-          item.nickname = user.nickname;
-          item.avatar = user.avatar;
-        }
-      }
+      // if(data.data.length > 0 && typeof data.data[0].user_id === "number") //如果存在user_id就提取出昵称和头像
+      // {
+      //   for(let item of data.data)
+      //   {
+      //     const user = await this.model("user").field("nickname, avatar").where({ id: item.user_id }).find();
+      //     item.nickname = user.nickname;
+      //     item.avatar = user.avatar;
+      //   }
+      // }
       //过滤敏感字段
       if(data.data.length > 0)
       {
         for(let item of data.data)
         {
           delete item["session_key"];
-          delete item["openid"];
+          delete item["weixin_openid"];
         }
       }
       return this.success(data);
@@ -149,10 +149,11 @@ module.exports = function(modelName, columns) {return {
    * @return {Promise} []
    */
   async changeimgAction() {
+    const { mch } = this.ctx.state;
     const { id, column } = this.get();
     //储存
     const service = this.service('saveimg');
-    const { save_path, url } = service.save(this.file());
+    const { save_path, url } = await service.saveToCloud(this.file(), mch);
     //入库
     const updateObj = {};
           updateObj[column] = url;

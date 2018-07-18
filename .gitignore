@@ -42,3 +42,6 @@ www/static/upload
 # others
 package-lock.json
 local/
+
+nideshop_haixin.sql
+nideshop_huipu.sql

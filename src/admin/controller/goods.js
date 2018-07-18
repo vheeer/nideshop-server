@@ -187,10 +187,11 @@ module.exports = class extends Base {
    * @return {Promise} []
    */
   async changeImageAction() {
+    const { mch } = this.ctx.state;
     const { goodsId, column } = this.get();
     //储存
     const saveImgService = this.service('saveimg');
-    const { save_path, url } = saveImgService.save(this.file());
+    const { save_path, url } = await saveImgService.saveToCloud(this.file(), mch);
     //入库
     const updateObj = {};
           updateObj[column] = url;

@@ -12,6 +12,8 @@ module.exports = class extends Base {
     let goodsAmount = 0.00;
     let checkedGoodsCount = 0;
     let checkedGoodsAmount = 0.00;
+    let freight_min = 99999;
+    let freight;
     for (const cartItem of cartList) {
       goodsCount += cartItem.number;
       goodsAmount += parseFloat((cartItem.number * cartItem.retail_price).toFixed(2));
@@ -22,11 +24,19 @@ module.exports = class extends Base {
       checkedGoodsAmount = parseFloat(checkedGoodsAmount.toFixed(2));
 
       // 查找商品的图片
-      cartItem.list_pic_url = await this.model('goods').where({id: cartItem.goods_id}).getField('list_pic_url', true);
+      const { list_pic_url, is_free_delivery, freight } = await this.model('goods').where({id: cartItem.goods_id}).find();
+      cartItem.list_pic_url = list_pic_url;
+      if(is_free_delivery === 1){
+        freight_min = 0;
+      }
+      if(freight_min > 0){
+        freight_min = Math.min(freight_min, freight);
+      }
     }
-
+    freight = freight_min;
     return {
       cartList: cartList,
+      freight,
       cartTotal: {
         goodsCount: goodsCount,
         goodsAmount: goodsAmount,
@@ -254,27 +264,27 @@ module.exports = class extends Base {
       checkedAddress.full_region = checkedAddress.province_name + checkedAddress.city_name + checkedAddress.district_name;
     }
 
-    // 根据收货地址计算运费
-    const { freight: freightPrice } = await this.model('others').field("freight").limit(1).find();
-
     // 获取要购买的商品
     const cartData = await this.getCart();
     const checkedGoodsList = cartData.cartList.filter(function(v) {
       return v.checked === 1;
     });
 
+    // 计算运费
+    const freightPrice = cartData.freight;
+    
     // 获取可用的优惠券信息，功能还示实现
     const couponList = await this.model('user_coupon').where({ user_id: think.userId}).select();
     const couponPrice = 0.00; // 使用优惠券减免的金额
 
     // 计算订单的费用
     const goodsTotalPrice = cartData.cartTotal.checkedGoodsAmount; // 商品总价
-    const orderTotalPrice = cartData.cartTotal.checkedGoodsAmount + freightPrice - couponPrice; // 订单的总价
+    const orderTotalPrice = parseFloat((cartData.cartTotal.checkedGoodsAmount + freightPrice - couponPrice).toFixed(2)); // 订单的总价
     const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额
 
     return this.success({
       checkedAddress: checkedAddress,
-      freightPrice: freightPrice,
+      freightPrice,
       checkedCoupon: {},
       couponList: couponList,
       couponPrice: couponPrice,

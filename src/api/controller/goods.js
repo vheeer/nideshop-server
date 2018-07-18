@@ -37,7 +37,16 @@ module.exports = class extends Base {
     const brand = await this.model('brand').where({id: info.brand_id}).find();
     const commentCount = await this.model('comment').where({value_id: goodsId, type_id: 0}).count();
     const hotComment = await this.model('comment').where({value_id: goodsId, type_id: 0}).order('id desc').find();
+    const productList = await model.getProductList(goodsId);
     let commentInfo = {};
+    let specificationIds = new Set();
+    productList.forEach(product => {
+      const product_specification_ids = product.goods_specification_ids.split("_");
+      product_specification_ids.forEach(specification_id => {
+        specificationIds.add(specification_id);
+      })
+    });
+    console.log("商品规格ID", specificationIds);
     if (!think.isEmpty(hotComment)) {
       const commentUser = await this.model('user').field(['nickname', 'username', 'avatar']).where({id: hotComment.user_id}).find();
       commentInfo = {
@@ -69,8 +78,8 @@ module.exports = class extends Base {
       issue: issue,
       comment: comment,
       brand: brand,
-      specificationList: await model.getSpecificationList(goodsId),
-      productList: await model.getProductList(goodsId)
+      productList,
+      specificationList: await model.getSpecificationList([ ...specificationIds ])
     });
   }
 
@@ -79,16 +88,27 @@ module.exports = class extends Base {
    * @returns {Promise.<*>}
    */
   async categoryAction() {
+    const { id, type: type = "1" } = this.get(); //type 为1时，拉取指定的一级分类及其顶级分类和兄弟分类， type为2时，拉取全部一级分类, type默认值为1
     const model = this.model('category');
-    const currentCategory = await model.where({id: this.get('id')}).find();
-    const parentCategory = await model.where({id: currentCategory.parent_id}).find();
-    const brotherCategory = await model.where({parent_id: currentCategory.parent_id}).select();
+    console.log("type", type);
+    if(type === "1"){
+      const currentCategory = await model.where({ id }).find();
+      const parentCategory = await model.where({ id: currentCategory.parent_id }).find();
+      const brotherCategory = await model.where({ parent_id: currentCategory.parent_id }).select();
 
-    return this.success({
-      currentCategory: currentCategory,
-      parentCategory: parentCategory,
-      brotherCategory: brotherCategory
-    });
+      return this.success({
+        currentCategory,
+        parentCategory,
+        brotherCategory
+      });
+    }else if(type === "2"){
+      const currentCategory = await model.where({ id }).find();
+      const firstCategoryList = await model.where({ level: "L2" }).select();
+      return this.success({
+        currentCategory,
+        brotherCategory: firstCategoryList
+      });
+    }
   }
 
   /**

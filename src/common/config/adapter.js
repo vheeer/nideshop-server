@@ -122,9 +122,9 @@ exports.model = {
     password: ';Classmate1133',
     dateStrings: true
   },
-  bishuiyuan_huoke: {  
+  haina: {  
     handle: mysql,
-    database: 'nideshop_bishuiyuan_huoke',
+    database: 'nideshop_haina',
     prefix: 'nideshop_',
     encoding: 'utf8mb4',
     host: '127.0.0.1',

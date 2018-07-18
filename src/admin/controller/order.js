@@ -1,6 +1,7 @@
 const Base = require('./base.js');
 const Rest = require('./rest.js');
 const { readAction, createAction, updateAction, deleteAction, changeImageAction } = Rest("order");
+const tenpay = require('tenpay-2');
 
 class top extends Base {
   async indexAction() {
@@ -156,6 +157,73 @@ class top extends Base {
       this.fail({ mes: "fail" });
   }
 
+  /**
+   * 同意退款
+   * @returns {Promise.<void>}
+   */
+  async acceptrefundAction() {
+    const { mch } = this.ctx.state;
+    const orderId = this.post('id');
+    const orderInfo = await this.model('order').where({ id: orderId }).find();
+    const { appid: sub_appid, mch_id: sub_mch_id} = await this.model('account', 'mch').where({ acc: mch }).limit(1).find();
+    if(think.isEmpty(orderInfo)){
+      return this.fail('订单不存在');
+    }
+
+    const tenpay_config = {
+      appid: this.config("operator.appid"),
+      mchid: this.config("operator.mch_id"),
+      sub_appid,
+      sub_mch_id,
+      partnerKey: this.config("operator.partner_key"),
+      pfx: require('fs').readFileSync(this.config("cert_root") + mch + '/apiclient_cert.p12'),
+      notify_url: this.config("weixin.notify_url"),
+      spbill_create_ip: ''
+    };
+    const api = new tenpay(tenpay_config);
+
+    let result = await api.refund({
+      // transaction_id, out_trade_no 二选一
+      // transaction_id: '微信的订单号',
+      out_trade_no: orderInfo.out_trade_no,
+      out_refund_no: orderInfo.out_trade_no,
+      total_fee: orderInfo.total_fee,
+      refund_fee: orderInfo.total_fee
+    });
+
+    console.log("退款结果", result);
+
+    return this.success(result);
+  }
+
+
+  /**
+   * update request
+   * @return {Promise}
+   */
+  async updateAction() {
+    console.log("this.post is ", this.post());
+    const postBody = this.post();
+    const { id } = postBody;
+    delete postBody.id;
+
+    let data = await this.model("order").where({ id }).update(postBody);
+    // 改变运单号
+    if(typeof postBody["freight_id"] !== "undefined")
+    {
+      const thenUpdateResult = await this.model("order_express").where({ order_id: id }).thenUpdate({
+        order_id: id,
+        logistic_code: postBody["freight_id"],
+        shipper_name: "邮政快递包裹",
+        shipper_code: "YZPY"
+      },{
+        order_id: id
+      });
+      const latestExpressInfo = await this.model('order_express').getLatestOrderExpress(id);
+    }
+    return this.success(data);
+  }
+
   async destoryAction() {
     const id = this.post('id');
     await this.model('order').where({id: id}).limit(1).delete();
@@ -170,7 +238,7 @@ class top extends Base {
 };
 top.prototype.readAction = readAction;
 top.prototype.createAction = createAction;
-top.prototype.updateAction = updateAction;
+// top.prototype.updateAction = updateAction;
 top.prototype.deleteAction = deleteAction;
 top.prototype.changeImageAction = changeImageAction;
 module.exports = top;

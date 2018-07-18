@@ -94,16 +94,26 @@ module.exports = class extends Base {
       return this.fail('请添加默认地址');
     }
 
-    // 运费
-    const { freight } = await this.model('others').field("freight").limit(1).find();
-    const freightPrice = freight;
-
     //查找货物信息
     const checkedGoods = await this.model('goods').where({ id: goods_id }).find();
     if(think.isEmpty(checkedGoods)) {
       return this.fail('商品已不存在');
     }
     think.logger.debug("checkedGoods", checkedGoods);
+
+    // 运费
+    const { is_free_delivery, freight: goods_freight } = checkedGoods;
+    let freightPrice;
+    if(is_free_delivery === 1){
+      freightPrice = 0;
+    }else{
+      const { freight } = await this.model('others').field("freight").limit(1).find();
+      if(typeof goods_freight === "number"){
+        freightPrice = goods_freight;
+      }else{
+        freightPrice = freight;
+      }
+    } 
 
     //查找产品信息
     const checkedProduct = await this.model('product').where({ goods_id: goods_id, id: purduct_id }).find();
@@ -177,6 +187,9 @@ module.exports = class extends Base {
       referee: is_contribute?referee:null
     };
 
+    console.log("运费: ", freightPrice)
+    console.log("订单信息: ", orderInfo)
+
     // 开启事务，插入订单信息和订单商品
     const orderId = await this.model('order').add(orderInfo);
     orderInfo.id = orderId;
@@ -219,15 +232,26 @@ module.exports = class extends Base {
     if (think.isEmpty(checkedAddress)) {
       return this.fail('请选择收货地址');
     }
-    // 运费
-    const { freight } = await this.model('others').field("freight").limit(1).find();
-    const freightPrice = freight;
 
     // 获取要购买的商品
     const checkedGoodsList = await this.model('cart').where({ user_id: think.userId, session_id: 1, checked: 1 }).select();
     if (think.isEmpty(checkedGoodsList)) {
       return this.fail('请选择商品');
     }
+    // 运费
+    let freight_min = 99999;
+    let freightPrice;
+    for (const goods of checkedGoodsList) {
+      const { is_free_delivery, freight } = await this.model("goods").where({ id: goods.goods_id }).find();
+
+      if(is_free_delivery === 1){
+        freight_min = 0;
+      }
+      if(freight_min > 0){
+        freight_min = Math.min(freight_min, freight);
+      }
+    }
+    freightPrice = freight_min;
 
     // 统计商品总价
     let goodsTotalPrice = 0.00;
@@ -243,7 +267,7 @@ module.exports = class extends Base {
     }
 
     // 订单价格计算
-    const orderTotalPrice = goodsTotalPrice + freightPrice - couponPrice; // 订单的总价
+    const orderTotalPrice = parseFloat((goodsTotalPrice + freightPrice - couponPrice).toFixed(2)); // 订单的总价
     const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额
     const currentTime = parseInt(this.getTime());
 

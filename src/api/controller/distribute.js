@@ -94,7 +94,8 @@ module.exports = class extends Base {
   async detailAction() {
     const { mch } = this.get();
   	const userId = think.userId;
-  	const user_info = await this.model("user").field("id,balance,cash_paid,is_distributor,referee,code").where({ id: userId }).limit(1).find();
+  	const user_info = await this.model("user").where({ id: userId }).limit(1).find();
+    const referee_user_info = await this.model("user").where({ id: user_info.referee }).limit(1).find();
   	const { id, balance, cash_paid } = user_info;
     let { code } = user_info;
   	// 佣金总额
@@ -108,7 +109,7 @@ module.exports = class extends Base {
     // 分享背景图
     const { share_background } = await this.model("others").limit(1).find();
 
-    if(code === ""){
+    if(think.isEmpty(code)){
     	// 获取access_token
       const params = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
     	const service = this.service("weixin", params);
@@ -136,6 +137,7 @@ module.exports = class extends Base {
     
   	return this.success({
   		...user_info,
+      // referee_user_info,
   		cash_total, 
       code,
       share_background,

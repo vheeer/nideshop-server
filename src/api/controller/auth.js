@@ -62,19 +62,21 @@ module.exports = class extends Base {
         weixin_openid: sessionData.openid,
         avatar: userInfo.avatarUrl || '',
         gender: userInfo.gender || 1, // 性别 0：未知、1：男、2：女
-        nickname: userInfo.nickName
+        nickname: userInfo.nickName,
+        session_key: sessionData.session_key
       });
     }
 
     sessionData.user_id = userId;
 
     // 查询用户信息
-    const newUserInfo = await this.model('user').field(['id', 'username', 'nickname', 'gender', 'avatar', 'birthday', 'referee', 'is_distributor', 'code']).where({ id: userId }).find();
+    const newUserInfo = await this.model('user').field(['id', 'username', 'nickname', 'mobile', 'gender', 'avatar', 'birthday', 'referee', 'is_distributor', 'code']).where({ id: userId }).find();
 
     // 更新登录信息
     userId = await this.model('user').where({ id: userId }).update({
       last_login_time: parseInt(new Date().getTime() / 1000),
-      last_login_ip: clientIp
+      last_login_ip: clientIp,
+      session_key: sessionData.session_key
     });
 
     const TokenSerivce = this.service('token', 'api');

@@ -14,7 +14,7 @@ module.exports = class extends think.Model {
    * @param goodsId
    * @returns {Promise.<Array>}
    */
-  async getSpecificationList(goodsId) {
+  async getSpecificationList(specificationIds) {
     // 根据sku商品信息，查找规格值列表
     const specificationRes = await this.model('goods_specification').alias('gs')
       .field(['gs.*', 's.name'])
@@ -24,7 +24,7 @@ module.exports = class extends think.Model {
         as: 's',
         on: ['specification_id', 'id']
       })
-      .where({goods_id: goodsId}).select();
+      .where({ 'gs.id': ["IN", specificationIds] }).select();
 
     const specificationList = [];
     const hasSpecificationList = {};

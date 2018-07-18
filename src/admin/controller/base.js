@@ -29,6 +29,7 @@ module.exports = class extends think.Controller {
         return _this.model_1(name, model_spe?model_spe:model_com, m);
       }
     }(userName);
+    this.ctx.state["mch"] = userName;
 
     // 只允许登录操作
     if (this.ctx.controller !== 'auth') {

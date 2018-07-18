@@ -7,6 +7,7 @@ module.exports = class extends Base {
    * @returns {Promise<PreventPromise|void|Promise>}
    */
   async prepayAction() {
+    const that = this;
     const { orderId, mch } = this.get();
 
     const orderInfo = await this.model('order').where({ id: orderId }).find();
@@ -22,21 +23,42 @@ module.exports = class extends Base {
       return this.fail('微信支付失败');
     }
     const params = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
-    const WeixinSerivce = this.service('weixin', 'api', params);
+    const { is_sub } = params;
+    let WeixinSerivce_params;
+    if(is_sub === 1){
+      // 服务商模式
+      WeixinSerivce_params = {
+        is_sub,
+        appid: that.config("operator.appid"),
+        mch_id: that.config("operator.mch_id"),
+        partner_key: params.partner_key,
+        sub_appid: params.appid,
+        sub_mch_id: params.mch_id, 
+        sub_openid: openid
+      }
+    }else{
+      WeixinSerivce_params = {
+        // 非服务商模式
+        is_sub,
+        appid: params.appid,
+        mch_id: params.mch_id, 
+        partner_key: params.partner_key,
+        openid
+      }
+    }
+    const WeixinSerivce = this.service('weixin', 'api', WeixinSerivce_params);
     try {
       //统一下单
       const outTradeNo = orderInfo.order_sn + "" + Math.round(new Date().getTime()/1000);
       const returnParams = await WeixinSerivce.createUnifiedOrder({
-        openid: openid,
-        // body: '订单编号：' + orderInfo.order_sn,
-        // out_trade_no: orderInfo.order_sn,
         body: '商户订单：' + orderInfo.order_sn,
         out_trade_no: outTradeNo,
         total_fee: parseInt(orderInfo.actual_price * 100),
         spbill_create_ip: '',
-        attach: mch
+        attach: "mch=" + mch + "&is_sub=" + is_sub 
       });
       console.log("统一下单返回：", returnParams);
+      const result = await this.model("order").where({ id: orderId }).update({ out_trade_no: outTradeNo }); //更新out_trade_no
       return this.success(returnParams);
     } catch (err) {
       think.logger.warn('微信支付失败', err);
@@ -108,16 +130,19 @@ module.exports = class extends Base {
   async notifyAction() {
     console.log("----------------weixin notify----------------");
     let WeixinSerivce = this.service('weixin', 'api');
-    const result = WeixinSerivce.payNotify(this.post('xml'));
+    think.logger.debug("this.post('xml')", this.post('xml'));
+    
+    const result = await WeixinSerivce.payNotify(this.post('xml'), this);
+
     think.logger.debug("notify post XML", result);
     if (!result) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[支付失败]]></return_msg></xml>`;
     }
-    const { attach: acc } = result;
-    // WeixinSerivce = this.service('weixin', 'api', { mch_id });
-    // const params = await this.model("account", "mch").where({ mch_id }).limit(1).find();
+
+    const { mch: acc } = result;
+
     console.log("acc: ", acc);
-    // const { acc } = params;
+
     // 已确定的商户模型
     const orderModel = this.model('order', acc);
     const userModel = this.model('user', acc);

@@ -20,7 +20,7 @@ module.exports = class extends think.Service {
       method: 'POST',
       url: think.config('express.request_url'),
       headers: {
-        'content-type': 'application/x-www-form-urlencoded'
+        'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
       },
       form: fromData
     };
@@ -28,12 +28,12 @@ module.exports = class extends think.Service {
     try {
       const requestResult = await rp(sendOptions);
       if (think.isEmpty(requestResult)) {
-        return expressInfo;
+        return { mes: "返回空", ...expressInfo };
       }
       expressInfo = this.parseExpressResult(requestResult);
       expressInfo.shipperCode = shipperCode;
       expressInfo.logisticCode = logisticCode;
-      return expressInfo;
+      return { mes: "返回正常", ...expressInfo };
     } catch (err) {
       return expressInfo;
     }

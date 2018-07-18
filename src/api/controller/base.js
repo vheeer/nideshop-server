@@ -7,7 +7,9 @@ module.exports = class extends think.Controller {
     const { mch } = this.get();
     think.token = this.ctx.header['x-nideshop-token'] || '';
     const tokenSerivce = think.service('token', 'api');
-    think.userId = await tokenSerivce.getUserId();
+    const userId = await tokenSerivce.getUserId();
+    think.userId = userId;
+    this.ctx.state.userId = userId;
 
 
     // 多商户
@@ -17,6 +19,15 @@ module.exports = class extends think.Controller {
         return _this.model_1(name, model_spe?model_spe:model_com, m);
       }
     }(mch);
+
+    // 多商户 
+    // const { mch_id } = this.get(); //小程序端获取商铺ID
+    // this.model_1 = this.model;
+    // this.model = function(model_com){
+      // return function(name, model_spe, m){
+        // return _this.model_1(name, model_spe, m).where({ mch_id });
+      // }
+    // }(mch);
 
 
     const publicController = this.config('publicController');

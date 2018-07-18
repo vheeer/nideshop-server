@@ -3,7 +3,41 @@ const _ = require('lodash');
 export default class extends think.Model {
   get relation() {
     return {
-      order_goods: think.Model.HAS_MANY
+      order_goods: {
+        type: think.Model.HAS_MANY
+      },
+      user: {
+        type: think.Model.BELONG_TO,
+        field: "id, nickname, avatar, gender, birthday"
+      },
+      country: {
+        model: 'region',
+        type: think.Model.BELONG_TO,
+        key: 'country',
+        where: "type=0",
+        field: "id, name"
+      },
+      province_text: {
+        model: 'region',
+        type: think.Model.BELONG_TO,
+        key: 'province',
+        where: 'type=1',
+        field: "id, name"
+      },
+      city_text: {
+        model: 'region',
+        type: think.Model.BELONG_TO,
+        key: 'city',
+        where: 'type=2',
+        field: "id, name"
+      },
+      district_text: {
+        model: 'region',
+        type: think.Model.BELONG_TO,
+        key: 'district',
+        where: 'type=3',
+        field: "id, name"
+      }
     };
   }
   /**

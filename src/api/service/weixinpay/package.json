@@ -1,0 +1,69 @@
+{
+  "_from": "weixinpay",
+  "_id": "weixinpay@1.0.12",
+  "_inBundle": false,
+  "_integrity": "sha1-3MzyTmidYIsvtocd/sDk5MyKmCs=",
+  "_location": "/weixinpay",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "weixinpay",
+    "name": "weixinpay",
+    "escapedName": "weixinpay",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/weixinpay/-/weixinpay-1.0.12.tgz",
+  "_shasum": "dcccf24e689d608b2fb6871dfec0e4e4cc8a982b",
+  "_spec": "weixinpay",
+  "_where": "E:\\desktop\\upload",
+  "author": {
+    "name": "kingwell leng"
+  },
+  "bugs": {
+    "url": "https://github.com/lengjh/weixinpay/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "md5": "*",
+    "request": "^2.79.0",
+    "xml2js": "^0.4.17"
+  },
+  "deprecated": false,
+  "description": "微信小程序支付，创建统一订单，调用支付",
+  "homepage": "https://github.com/lengjh/weixinpay#readme",
+  "keywords": [
+    "支付",
+    "微信支付",
+    "微信小程序支付",
+    "微信",
+    "微信sdk",
+    "JSAPI",
+    "weixin",
+    "pay",
+    "wxpay",
+    "weixin-pay",
+    "weixinpay",
+    "wx-payment",
+    "weixin-payment",
+    "weixinpayment",
+    "payment"
+  ],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "weixinpay",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lengjh/weixinpay.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.12"
+}
