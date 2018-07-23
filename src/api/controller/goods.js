@@ -118,6 +118,7 @@ module.exports = class extends Base {
   async listAction() {
     const categoryId = this.get('categoryId');
     const brandId = this.get('brandId');
+    const tagId = this.get('tagId');
     const keyword = this.get('keyword');
     const isNew = this.get('isNew');
     const isHot = this.get('isHot');
@@ -149,6 +150,9 @@ module.exports = class extends Base {
 
     if (!think.isEmpty(brandId)) {
       whereMap.brand_id = brandId;
+    }
+    if (!think.isEmpty(tagId)) {
+      whereMap.tag_id = tagId;
     }
 
     // 只显示在售

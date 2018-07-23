@@ -9,6 +9,7 @@ module.exports = class extends Base {
     const newGoods = await this.model('goods').field(['id', 'name', 'list_pic_url', 'retail_price']).where({is_new: 1, is_on_sale: 1}).limit(4).select();
     const hotGoods = await this.model('goods').field(['id', 'name', 'list_pic_url', 'retail_price', 'goods_brief']).where({is_hot: 1, is_on_sale: 1}).limit(3).select();
     const brandList = await this.model('brand').where({ is_show: 1 }).order({ new_sort_order: 'asc' }).limit(4).select();
+    const tagList = await this.model('tag').where({ is_show: 1 }).order({ new_sort_order: 'asc' }).limit(4).select();
     const topicList = await this.model('topic').where({ is_show: 1 }).order({ sort_order: 'asc' }).limit(3).select();
     const others = await this.model('others').select();
 
@@ -42,6 +43,7 @@ module.exports = class extends Base {
       newGoodsList: newGoods,
       hotGoodsList: hotGoods,
       brandList: brandList,
+      tagList: tagList,
       topicList: topicList,
       categoryGoodsList,
       firstCategoryList,

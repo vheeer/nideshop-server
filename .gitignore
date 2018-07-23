@@ -41,6 +41,7 @@ www/static/upload
 
 # others
 package-lock.json
+sftp-config.json
 local/
 
 nideshop_haixin.sql
