@@ -5,12 +5,12 @@ module.exports = class extends Base {
   async loginByWeixinAction() {
     console.log("this.post(): ", this.post());
     const code = this.post('code');
-    const { mch } = this.get();
+    const { currentAccount } = this.ctx.state;
     const fullUserInfo = this.post('userInfo');
     const userInfo = fullUserInfo.userInfo;
     const clientIp = ''; // 暂时不记录 ip
-
-    const { app_secret, appid } = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
+    console.log('currentAccount-----', currentAccount);
+    const { app_secret, appid } = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
     console.log("{ app_secret, appid }", app_secret, appid);
 
     // 获取openid

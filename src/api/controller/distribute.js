@@ -7,14 +7,14 @@ const request = require('request');
 
 module.exports = class extends Base {
   async withdrawAction() {
-  	const { mch } = this.get();
+  	const { currentAccount } = this.ctx.state;
     const { real_name, amount } = this.post();
-    const user_id = think.userId;
+    const user_id = this.ctx.state.userId;
   	const notify_url = this.config("weixin.notify_url");
   	const certRoot = this.config("cert_root"); //证书根目录
-  	const pfx = fs.readFileSync(certRoot + mch + '/apiclient_cert.p12'); //证书文件
+  	const pfx = fs.readFileSync(certRoot + currentAccount + '/apiclient_cert.p12'); //证书文件
 
-  	const { appid, partner_key, mch_id } = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
+  	const { appid, partner_key, mch_id } = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
   	const { weixin_openid: openid } = await this.model("user").where({ id: user_id }).limit(1).find();
 
   	//微信支付参数
@@ -92,8 +92,8 @@ module.exports = class extends Base {
   }
 */
   async detailAction() {
-    const { mch } = this.get();
-  	const userId = think.userId;
+    const { currentAccount } = this.ctx.state;
+  	const userId = this.ctx.state.userId;
   	const user_info = await this.model("user").where({ id: userId }).limit(1).find();
     const referee_user_info = await this.model("user").where({ id: user_info.referee }).limit(1).find();
   	const { id, balance, cash_paid } = user_info;
@@ -111,7 +111,7 @@ module.exports = class extends Base {
 
     if(think.isEmpty(code)){
     	// 获取access_token
-      const params = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
+      const params = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
     	const service = this.service("weixin", params);
       const access_token = await service.get_access_token();
       // 获取二维码
@@ -145,7 +145,7 @@ module.exports = class extends Base {
   	});
   }
   async listAction() {
-    const user_id = think.userId;
+    const user_id = this.ctx.state.userId;
     const userInfo = await this.model("user").where({ id: user_id }).find();
     const commisions = await this.model("distribute_commision").alias("a").join({ table: "order", on: ['order_id', 'id'] }).where("a.user_id=" + user_id).select();
 

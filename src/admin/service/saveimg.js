@@ -8,14 +8,16 @@ var cos = new COS({
 });
 
 // 上传单个文件
-const upload_p = (bucket, file, target) => new Promise((resolve, reject) => {
+const upload_p = (bucket, path, save_path) => new Promise((resolve, reject) => {
+	console.log('分片上传bucket, path, save_path', bucket, path, save_path);
 	// 分片上传
 	cos.sliceUploadFile({
 	    Bucket: bucket,
 	    Region: 'ap-beijing',
-	    Key: target,
-	    FilePath: file
+	    Key: save_path,
+	    FilePath: path
 	}, function (err, data) {
+		console.log('分片上传err, data', { err, data })
 		if(err)
 			reject(err);
 	    resolve({ err, data });
@@ -35,7 +37,8 @@ module.exports = class extends think.Service {
 	      return this.fail('保存失败');
 	    }
 	    const { name, path } = file;
-	    const type = name.split('.')[1];
+	    const typeArr = name.split('.');
+	    const type = typeArr[typeArr.length - 1];
 	    //保存路径
 	    const randValue = think.uuid(32);
 	    const save_path = think.ROOT_PATH + '/www/static/upload/images/' + randValue + '.' + type;
@@ -50,6 +53,7 @@ module.exports = class extends think.Service {
 	    return { save_path, url };
 	}
 	async saveToCloud(imageFile, mch) {
+		console.log('云储存，imageFile, mch', imageFile, mch);
 		//获取文件对象
 		let file = null;
 		for(const key in imageFile)
@@ -61,11 +65,15 @@ module.exports = class extends think.Service {
 	    	return this.fail('保存失败');
 	    }
 	    const { name, path } = file;
-	    const type = name.split('.')[1];
+	    const typeArr = name.split('.');
+	    const type = typeArr[typeArr.length - 1];
+	    console.log('{ name, path }', { name, path });
 	    // 保存路径
 	    const randValue = think.uuid(32);
 	    const save_path = "/" + mch + "/upload/images/" + randValue + '.' + type;
+	    console.log('对象储存路径', save_path);
 	    const { err, data } = await upload_p("nideshop-admin-dva-1256171234", path, save_path);
+	    console.log('分片上传data', data);
 	    if(err)
 	    	return { err };
 		//返回保存路径

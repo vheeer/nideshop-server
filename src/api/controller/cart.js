@@ -6,7 +6,7 @@ module.exports = class extends Base {
    * @returns {Promise.<{cartList: *, cartTotal: {goodsCount: number, goodsAmount: number, checkedGoodsCount: number, checkedGoodsAmount: number}}>}
    */
   async getCart() {
-    const cartList = await this.model('cart').where({user_id: think.userId, session_id: 1}).select();
+    const cartList = await this.model('cart').where({user_id: this.ctx.state.userId, session_id: 1}).select();
     // 获取购物车统计信息
     let goodsCount = 0;
     let goodsAmount = 0.00;
@@ -63,7 +63,7 @@ module.exports = class extends Base {
     const productId = this.post('productId');
     const number = this.post('number');
 
-    think.logger.debug([goodsId, productId, number, think.userId]);
+    think.logger.debug([goodsId, productId, number, this.ctx.state.userId]);
     // 判断商品是否可以购买
     const goodsInfo = await this.model('goods').where({id: goodsId}).find();
     if (think.isEmpty(goodsInfo) || goodsInfo.is_delete === 1) {
@@ -80,7 +80,7 @@ module.exports = class extends Base {
 
     // 判断购物车中是否存在此规格商品
     // const cartInfo = await this.model('cart').where({goods_id: goodsId, product_id: productId}).find();
-    const cartInfo = await this.model('cart').where({user_id: think.userId, goods_id: goodsId, product_id: productId}).find();
+    const cartInfo = await this.model('cart').where({user_id: this.ctx.state.userId, goods_id: goodsId, product_id: productId}).find();
     think.logger.debug('购物车中同类商品 cartInfo', cartInfo);
     if (think.isEmpty(cartInfo)) {
       // 添加操作
@@ -103,7 +103,7 @@ module.exports = class extends Base {
         list_pic_url: goodsInfo.list_pic_url,
         number: number,
         session_id: 1,
-        user_id: think.userId,
+        user_id: this.ctx.state.userId,
         retail_price: productInfo.retail_price,
         market_price: productInfo.retail_price,
         goods_specifition_name_value: goodsSepcifitionValue.join(';'),
@@ -112,7 +112,7 @@ module.exports = class extends Base {
       };
       think.logger.debug('cartData', cartData);
       // await this.model('cart').thenAdd(cartData, {product_id: productId});
-      await this.model('cart').thenAdd(cartData, {product_id: productId, user_id: think.userId});
+      await this.model('cart').thenAdd(cartData, {product_id: productId, user_id: this.ctx.state.userId});
     } else {
       // 如果已经存在购物车中，则数量增加
       if (productInfo.goods_number < (number + cartInfo.number)) {
@@ -252,9 +252,9 @@ module.exports = class extends Base {
     // 选择的收货地址
     let checkedAddress = null;
     if (addressId) {
-      checkedAddress = await this.model('address').where({id: addressId, user_id: think.userId}).find();
+      checkedAddress = await this.model('address').where({id: addressId, user_id: this.ctx.state.userId}).find();
     } else {
-      checkedAddress = await this.model('address').where({is_default: 1, user_id: think.userId}).find();
+      checkedAddress = await this.model('address').where({is_default: 1, user_id: this.ctx.state.userId}).find();
     }
 
     if (!think.isEmpty(checkedAddress)) {
@@ -274,7 +274,7 @@ module.exports = class extends Base {
     const freightPrice = cartData.freight;
     
     // 获取可用的优惠券信息，功能还示实现
-    const couponList = await this.model('user_coupon').where({ user_id: think.userId}).select();
+    const couponList = await this.model('user_coupon').where({ user_id: this.ctx.state.userId}).select();
     const couponPrice = 0.00; // 使用优惠券减免的金额
 
     // 计算订单的费用

@@ -9,7 +9,7 @@ module.exports = class extends Base {
   async listAction() {
     // const orderList = await this.model('order').where({ user_id: think.userId }).page(1, 10).countSelect();
     // const orderList = await this.model('order').where('user_id=' + think.userId + ' and order_status not in (101, 102)').order({ id: 'desc' }).page(1, 10).countSelect();
-    const orderList = await this.model('order').where('user_id=' + think.userId + ' and order_status not in (101, 102)').order({ id: 'desc' }).page(1, 100).countSelect();
+    const orderList = await this.model('order').where('user_id=' + this.ctx.state.userId + ' and order_status not in (101, 102)').order({ id: 'desc' }).page(1, 100).countSelect();
     const newOrderList = [];
     for (const item of orderList.data) {
       // 订单的商品
@@ -38,7 +38,7 @@ module.exports = class extends Base {
   async detailAction() {
     const orderId = this.get('orderId');
     // const orderInfo = await this.model('order').where({ user_id: 1, id: orderId }).find();
-    const orderInfo = await this.model('order').where({ user_id: think.userId, id: orderId }).find();
+    const orderInfo = await this.model('order').where({ user_id: this.ctx.state.userId, id: orderId }).find();
 
     if (think.isEmpty(orderInfo)) {
       return this.fail('订单不存在');
@@ -86,10 +86,10 @@ module.exports = class extends Base {
     // 获取收货地址信息和计算运费
     console.log("quickbuyAction post: ", this.post());
     const { goodsId: goods_id, productId: purduct_id, number, addressId: address_id } = this.post();
-    const { referee } = await this.model("user").where({ id: think.userId }).find();
+    const { referee } = await this.model("user").where({ id: this.ctx.state.userId }).find();
     const { is_contribute } = await this.model("others").limit(1).find();
 
-    const checkedAddress = await this.model('address').where({ user_id: think.userId, id: address_id }).find();
+    const checkedAddress = await this.model('address').where({ user_id: this.ctx.state.userId, id: address_id }).find();
     if(think.isEmpty(checkedAddress)) {
       return this.fail('请添加默认地址');
     }
@@ -160,7 +160,7 @@ module.exports = class extends Base {
 
     const orderInfo = {
       order_sn: this.model('order').generateOrderNumber(),
-      user_id: think.userId,
+      user_id: this.ctx.state.userId,
 
       // 收货地址和运费
       consignee: checkedAddress.name, 
@@ -226,7 +226,7 @@ module.exports = class extends Base {
   async submitAction() {
     // 获取收货地址信息和计算运费
     const { addressId } = this.post();
-    const { referee } = await this.model("user").where({ id: think.userId }).find();
+    const { referee } = await this.model("user").where({ id: this.ctx.state.userId }).find();
     const { is_contribute } = await this.model("others").limit(1).find();
     const checkedAddress = await this.model('address').where({ id: addressId }).find();
     if (think.isEmpty(checkedAddress)) {
@@ -234,7 +234,7 @@ module.exports = class extends Base {
     }
 
     // 获取要购买的商品
-    const checkedGoodsList = await this.model('cart').where({ user_id: think.userId, session_id: 1, checked: 1 }).select();
+    const checkedGoodsList = await this.model('cart').where({ user_id: this.ctx.state.userId, session_id: 1, checked: 1 }).select();
     if (think.isEmpty(checkedGoodsList)) {
       return this.fail('请选择商品');
     }
@@ -273,7 +273,7 @@ module.exports = class extends Base {
 
     const orderInfo = {
       order_sn: this.model('order').generateOrderNumber(),
-      user_id: think.userId,
+      user_id: this.ctx.state.userId,
 
       // 收货地址和运费
       consignee: checkedAddress.name,
@@ -338,7 +338,7 @@ module.exports = class extends Base {
    */
   async cancelAction() {
     const orderId = this.get('orderId');
-    const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
+    const orderInfo = this.model('order').where({ user_id: this.ctx.state.userId, id: orderId }).find();
 
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');
@@ -358,7 +358,7 @@ module.exports = class extends Base {
    */
   async deleteAction() {
     const orderId = this.get('orderId');
-    const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
+    const orderInfo = this.model('order').where({ user_id: this.ctx.state.userId, id: orderId }).find();
 
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');
@@ -378,7 +378,7 @@ module.exports = class extends Base {
    */
   async confirmAction() {
     const orderId = this.get('orderId');
-    const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
+    const orderInfo = this.model('order').where({ user_id: this.ctx.state.userId, id: orderId }).find();
 
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');
@@ -399,7 +399,7 @@ module.exports = class extends Base {
    */
   async refundAction() {
     const orderId = this.get('orderId');
-    const orderInfo = this.model('order').where({ user_id: think.userId, id: orderId }).find();
+    const orderInfo = this.model('order').where({ user_id: this.ctx.state.userId, id: orderId }).find();
 
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');

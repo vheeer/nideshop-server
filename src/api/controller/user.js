@@ -53,12 +53,12 @@ module.exports = class extends Base {
     if(parseInt(referee) === parseInt(this.ctx.state.userId)){
       referee = 0;
     }
-    const result = await this.model('user').where({ id: think.userId }).update({ referee, is_distributor: is_auto_distributor });
+    const result = await this.model('user').where({ id: this.ctx.state.userId }).update({ referee, is_distributor: is_auto_distributor });
     return this.success(result);
   }
   async groupAction() {
     const that = this;
-    const user_id = think.userId;
+    const user_id = this.ctx.state.userId;
     const userInfo = await that.model("user").where({ id: user_id }).find(); //我的信息
 
     const group = [];

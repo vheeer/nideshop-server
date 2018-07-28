@@ -26,7 +26,7 @@ import Rest from './rest.js';
 const namespace = "account";
 const actions = Rest(namespace);
 
-class controller extends Base {
+class controller extends think.Controller {
   async indexAction() {
     
     const { userName, password } = this.post();
@@ -67,6 +67,48 @@ class controller extends Base {
         }
         return this.fail("账号或密码错误");
     }
+  }
+  async logout() {
+    this.ctx.cookies.set('login', '0', { maxAge: 3600*24*1*1000 });
+    this.ctx.cookies.set('userName', "userName", { maxAge: -3600*24*1*1000 });
+    this.ctx.cookies.set('id', "id", { maxAge: -3600*24*1*1000 });
+    return this.success(1);
+  }
+  async register() {
+    const { userName, password } = this.post();
+    const _insert = {
+        acc: userName,
+        psd: password
+    }
+    const result = await this.model('account', 'mch').insert(_insert);
+    if(think.isEmpty(result)) {
+        return fail;
+    }
+
+    connection.query(sql, arr, (err, rows, fields) => {
+      if(err) {
+        res.send({ mes: "fail" });
+        throw err;
+      }
+      const { affectedRows, insertId } = rows;
+      console.log('The solution is: ', rows);
+      console.log('The fields is: ', fields);
+      if(affectedRows == 1){
+        connection.query("insert into mess (user_id)values(?);", [ insertId ], (err, rows, fields) => {
+          if(err) {
+            res.send({ mes: "fail" });
+            throw err;
+          }
+          res.cookie('login', '1', { maxAge: 3600*24*1*1000 });
+          res.cookie('userName', userName, { maxAge: 3600*24*1*1000 });
+          res.cookie('id', insertId, { maxAge: 3600*24*1*1000 });
+          res.send({ mes: "success", data: { id: insertId, userName: userName, password } });
+        });
+        
+      }else{
+        res.send({ mes: "fail" });
+      }
+    });
   }
 }
 Object.assign(controller.prototype, actions);

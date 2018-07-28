@@ -23,13 +23,16 @@ module.exports = class extends think.Controller {
     // console.log("typeof this.model", typeof this.model);
     // console.log("Object.keys(this.model)", Object.keys(this.model));
 
+    const { model: currentModel } = await this.model('account', 'mch').where({ acc: userName }).find();
+    think.logger.debug('currentModel', currentModel);
+
     this.model_1 = this.model;
     this.model = function(model_com){
       return function(name, model_spe, m){
         return _this.model_1(name, model_spe?model_spe:model_com, m);
       }
-    }(userName);
-    this.ctx.state["mch"] = userName;
+    }(currentModel);
+    this.ctx.state["mch"] = currentModel;
 
     // 只允许登录操作
     if (this.ctx.controller !== 'auth') {

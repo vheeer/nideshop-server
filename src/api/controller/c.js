@@ -5,13 +5,13 @@ import fs from "fs";
 
 module.exports = class extends Base {
   async indexAction() {
-  	const { mch } = this.get();
+  	const { currentAccount } = this.ctx.state;
   	const notify_url = this.config("weixin.notify_url");
   	const certRoot = this.config("cert_root"); //证书根目录
-  	const pfx = fs.readFileSync(certRoot + mch + '/apiclient_cert.p12'); //证书文件
+  	const pfx = fs.readFileSync(certRoot + currentAccount + '/apiclient_cert.p12'); //证书文件
 
-  	const { appid, partner_key, mch_id } = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
-  	const { weixin_openid: openid } = await this.model("user").where({ id: think.userId }).limit(1).find();
+  	const { appid, partner_key, mch_id } = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
+  	const { weixin_openid: openid } = await this.model("user").where({ id: this.ctx.state.userId }).limit(1).find();
 
   	//微信支付参数
   	let options = {

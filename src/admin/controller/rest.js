@@ -153,7 +153,9 @@ module.exports = function(modelName, columns) {return {
     const { id, column } = this.get();
     //储存
     const service = this.service('saveimg');
+    console.log('before saveToCloud');
     const { save_path, url } = await service.saveToCloud(this.file(), mch);
+    console.log('after saveToCloud');
     //入库
     const updateObj = {};
           updateObj[column] = url;

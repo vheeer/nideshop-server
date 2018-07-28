@@ -12,7 +12,7 @@ class controller extends Base {
 
 
   async applyAction(){
-    const userId = think.userId; //申请人Id
+    const userId = this.ctx.state.userId; //申请人Id
     const { real_name } = this.post();
 
     const apply_record = await this.model("distribute_apply").where({ user_id: userId }).find();

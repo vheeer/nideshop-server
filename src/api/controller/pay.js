@@ -8,21 +8,26 @@ module.exports = class extends Base {
    */
   async prepayAction() {
     const that = this;
-    const { orderId, mch } = this.get();
+    const { orderId } = this.get();
+    const { currentAccount } = this.ctx.state;
+    console.log(this.ctx.state);
+    const params = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
 
-    const orderInfo = await this.model('order').where({ id: orderId }).find();
+    const orderInfo = await this.model('order', params.model).where({ id: orderId }).find();
+
     if (think.isEmpty(orderInfo)) {
       return this.fail(400, '订单已取消');
     }
     if (parseInt(orderInfo.pay_status) !== 0) {
       return this.fail(400, '订单已支付，请不要重复操作');
     }
-    const openid = await this.model('user').where({ id: orderInfo.user_id }).getField('weixin_openid', true);
+    const openid = await this.model('user', params.model).where({ id: orderInfo.user_id }).getField('weixin_openid', true);
     if (think.isEmpty(openid)) {
       think.logger.warn('找不到openid');
       return this.fail('微信支付失败');
     }
-    const params = await this.model("account", "mch").where({ acc: mch }).limit(1).find();
+
+
     const { is_sub } = params;
     let WeixinSerivce_params;
     if(is_sub === 1){
@@ -55,10 +60,10 @@ module.exports = class extends Base {
         out_trade_no: outTradeNo,
         total_fee: parseInt(orderInfo.actual_price * 100),
         spbill_create_ip: '',
-        attach: "mch=" + mch + "&is_sub=" + is_sub 
+        attach: "account=" + currentAccount + "&is_sub=" + is_sub  //临时
       });
       console.log("统一下单返回：", returnParams);
-      const result = await this.model("order").where({ id: orderId }).update({ out_trade_no: outTradeNo }); //更新out_trade_no
+      const result = await this.model("order", params.model).where({ id: orderId }).update({ out_trade_no: outTradeNo }); //更新out_trade_no
       return this.success(returnParams);
     } catch (err) {
       think.logger.warn('微信支付失败', err);
@@ -138,16 +143,18 @@ module.exports = class extends Base {
     if (!result) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[支付失败]]></return_msg></xml>`;
     }
+    
+    const { account } = result;
+    console.log('account', account);
+    const { model: currentModel } = await this.model("account", "mch").where({ acc: account }).limit(1).find();
 
-    const { mch: acc } = result;
-
-    console.log("acc: ", acc);
+    console.log("currentModel: ", currentModel);
 
     // 已确定的商户模型
-    const orderModel = this.model('order', acc);
-    const userModel = this.model('user', acc);
-    const othersModel = this.model('others', acc);
-    const distribute_commisionModel = this.model('distribute_commision', acc);
+    const orderModel = this.model('order', currentModel);
+    const userModel = this.model('user', currentModel);
+    const othersModel = this.model('others', currentModel);
+    const distribute_commisionModel = this.model('distribute_commision', currentModel);
 
     const orderSn = result.out_trade_no.substring(0, 20);
     const orderInfo = await orderModel.getOrderByOrderSn(orderSn);

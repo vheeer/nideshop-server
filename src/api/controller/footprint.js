@@ -11,8 +11,8 @@ module.exports = class extends Base {
     const footprintId = this.post('footprintId');
     const userId = this.getLoginUserId();
     // 删除当天的同一个商品的足迹
-    const goods = await this.model('footprint').where({user_id: userId, id: footprintId}).find();
-    await this.model('footprint').where({user_id: userId, goods_id: goods.goods_id}).delete();
+    const goods = await this.model('footprint').where({user_id: this.ctx.state.userId, id: footprintId}).find();
+    await this.model('footprint').where({user_id: this.ctx.state.userId, goods_id: goods.goods_id}).delete();
 
     return this.success('删除成功');
   }
@@ -30,7 +30,7 @@ module.exports = class extends Base {
         join: 'left',
         as: 'g',
         on: ['f.goods_id', 'g.id']
-      }).where({user_id: this.getLoginUserId()})
+      }).where({user_id: this.ctx.state.userId})
       .order({id: 'desc'})
       .countSelect();
 
