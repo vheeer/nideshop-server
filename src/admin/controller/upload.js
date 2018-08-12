@@ -4,7 +4,7 @@ module.exports = class extends Base {
   async imageAction() {
     const { mch } = this.ctx.state;
     //储存
-    const saveImgService = this.service('saveImg');
+    const saveImgService = this.service('saveimg');
     console.log('before');
     const { save_path, url } = await saveImgService.saveToCloud(this.file(), mch);
     console.log('after');

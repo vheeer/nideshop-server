@@ -100,11 +100,10 @@ module.exports = class extends Base {
    */
   async numberAction() {
     const user = this.model('user');
-    const { mch } = this.get();
-    const { userId } = this.ctx.state;
+    const { userId, currentAccount } = this.ctx.state;
     const { encryptedData, iv, openid } = this.post();
     console.log("解密手机号码: post", this.post());
-    const { appid } = await this.model("account", "mch").where({ acc: mch }).find();
+    const { appid } = await this.model("account", "mch").where({ acc: currentAccount }).find();
 
     const userInfo = await user.where({ id: userId }).find();
     const { session_key } = userInfo;
