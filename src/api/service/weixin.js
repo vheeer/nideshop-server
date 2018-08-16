@@ -143,12 +143,14 @@ module.exports = class extends think.Service {
       const [ key, value ] = item.split("=");
       attach_obj[key] = value;
     });
-    let { mch, is_sub } = attach_obj;
+    
+    let { account, is_sub } = attach_obj;
     let partner_key;
+
     if(is_sub === "1")
       partner_key = that.config("operator.partner_key");
     else if(is_sub === "0"){
-      const mchInfo = await that.model("account", "mch").where({ acc: mch }).find();
+      const mchInfo = await that.model("account", "mch").where({ acc: account }).find();
       partner_key = mchInfo.partner_key;
     }
     console.log("秘钥", partner_key);
