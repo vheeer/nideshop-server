@@ -59,6 +59,6 @@ module.exports = class extends think.Controller {
    * @returns {*}
    */
   getLoginUserId() {
-    return think.userId;
+    return this.ctx.state.userId;
   }
 };

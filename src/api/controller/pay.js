@@ -135,16 +135,16 @@ module.exports = class extends Base {
   async notifyAction() {
     console.log("----------------weixin notify----------------");
     let WeixinSerivce = this.service('weixin', 'api');
-    think.logger.debug("this.post('xml')", this.post('xml'));
+    console.log("this.post('xml')", this.post('xml'));
     
     const result = await WeixinSerivce.payNotify(this.post('xml'), this);
 
-    think.logger.debug("notify post XML", result);
+    console.log("notify post XML", result);
     if (!result) {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[支付失败]]></return_msg></xml>`;
     }
     
-    const { account } = result;
+    const { account, is_sub } = result;
     console.log('account', account);
     const { model: currentModel } = await this.model("account", "mch").where({ acc: account }).limit(1).find();
 
