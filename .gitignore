@@ -44,5 +44,4 @@ package-lock.json
 sftp-config.json
 local/
 
-nideshop_haixin.sql
-nideshop_huipu.sql
+*.sql
