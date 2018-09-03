@@ -144,11 +144,19 @@ module.exports = class extends Base {
       return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[支付失败]]></return_msg></xml>`;
     }
     
-    const { account, is_sub } = result;
+    const { account, is_sub, user_id } = result;
     console.log('account', account);
     const { model: currentModel } = await this.model("account", "mch").where({ acc: account }).limit(1).find();
 
     console.log("currentModel: ", currentModel);
+
+    // 申请分销支付
+    if(user_id){
+      console.log('申请分销支付')
+      const result = await this.model("user", currentModel).where({ id: user_id }).update({ is_distributor: 1 });
+      console.log('result ', result)
+      return;
+    }
 
     // 已确定的商户模型
     const orderModel = this.model('order', currentModel);

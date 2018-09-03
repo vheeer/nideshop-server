@@ -13,9 +13,10 @@ class controller extends Base {
 
   async applyAction(){
     const userId = this.ctx.state.userId; //申请人Id
-    const { real_name } = this.post();
+    const { real_name, mobile, distributor_level } = this.post();
 
     const apply_record = await this.model("distribute_apply").where({ user_id: userId }).find();
+
     if(!think.isEmpty(apply_record))
       return this.fail(1);
 

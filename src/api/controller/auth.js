@@ -70,7 +70,7 @@ module.exports = class extends Base {
     sessionData.user_id = userId;
 
     // 查询用户信息
-    const newUserInfo = await this.model('user').field(['id', 'username', 'nickname', 'mobile', 'gender', 'avatar', 'birthday', 'referee', 'is_distributor', 'code']).where({ id: userId }).find();
+    const newUserInfo = await this.model('user').field(['id', 'username', 'nickname', 'mobile', 'gender', 'avatar', 'birthday', 'referee', 'is_distributor', 'code', 'balance', ]).where({ id: userId }).find();
 
     // 更新登录信息
     userId = await this.model('user').where({ id: userId }).update({

@@ -129,4 +129,65 @@ module.exports = class extends Base {
       this.fail();
     }
   }
+
+      /**
+   * 获取支付的请求参数
+   * @returns {Promise<PreventPromise|void|Promise>}
+   */
+  async prepayAction() {
+    const that = this;
+    console.log("post", this.post());
+
+    const { userId } = this.ctx.state;
+
+    const openid = await this.model('user').where({ id: userId }).getField('weixin_openid', true);
+
+    if (think.isEmpty(openid)) {
+      return this.fail('找不到openid，微信支付失败');
+    }
+
+    const { currentAccount } = this.ctx.state;
+    const params = await this.model('account', 'mch').where({ acc: currentAccount }).find();
+
+    const { is_sub } = params;
+    let WeixinSerivce_params;
+    if(is_sub === 1){
+      // 服务商模式
+      WeixinSerivce_params = {
+        is_sub,
+        appid: that.config("operator.appid"),
+        mch_id: that.config("operator.mch_id"),
+        partner_key: params.partner_key,
+        sub_appid: params.appid,
+        sub_mch_id: params.mch_id, 
+        sub_openid: openid
+      }
+    }else{
+      WeixinSerivce_params = {
+        // 非服务商模式
+        is_sub,
+        appid: params.appid,
+        mch_id: params.mch_id, 
+        partner_key: params.partner_key,
+        openid
+      }
+    }
+    const WeixinSerivce = this.service('weixin', 'api', WeixinSerivce_params);
+    try {
+      //统一下单
+      const outTradeNo = Date.now() + "" + Math.round(new Date().getTime()/1000);
+      const returnParams = await WeixinSerivce.createUnifiedOrder({
+        body: '商户订单：' + outTradeNo,
+        out_trade_no: outTradeNo,
+        total_fee: 1,
+        spbill_create_ip: '',
+        attach: "user_id=" + userId + "&account=" + currentAccount + "&is_sub=" + is_sub
+      });
+      console.log("统一下单返回：", returnParams);
+      return this.success(returnParams);
+    } catch (err) {
+      think.logger.warn('微信支付失败', err);
+      return this.fail('微信支付失败');
+    }
+  }
 };
