@@ -13,28 +13,28 @@ module.exports = class extends Base {
     const topicList = await this.model('topic').where({ is_show: 1 }).order({ sort_order: 'asc' }).limit(3).select();
     const others = await this.model('others').select();
 
-    const categoryList = await this.model('category').where({parent_id: 0, name: ['<>', '推荐']}).order("show_index").select();
+    const topCategoryList = await this.model('category').where({parent_id: 0, name: ['<>', '推荐']}).order("show_index").select();
     let categoryGoodsList = [];
     let firstCategoryList = [];
     
-      for (const categoryItem of categoryList) {  
-        const childCategoryIds = await this.model('category').where({parent_id: categoryItem.id}).getField('id', 100);
-        if(childCategoryIds.length === 0)
-          continue;
-        const categoryGoods = await this.model('goods').field(['id', 'name', 'list_pic_url', 'retail_price']).where({ category_id: ['IN', childCategoryIds], is_on_sale: 1 }).limit(7).select();
-        categoryGoodsList.push({
-          id: categoryItem.id,
-          name: categoryItem.name,
-          goodsList: categoryGoods
-        });
-      }
+    for (const categoryItem of topCategoryList) {
+      const childCategoryIds = await this.model('category').where({parent_id: categoryItem.id}).getField('id', 100);
+      if(childCategoryIds.length === 0)
+        continue;
+      const categoryGoods = await this.model('goods').field(['id', 'name', 'list_pic_url', 'retail_price']).where({ category_id: ['IN', childCategoryIds], is_on_sale: 1 }).limit(7).select();
+      categoryGoodsList.push({
+        id: categoryItem.id,
+        name: categoryItem.name,
+        goodsList: categoryGoods
+      });
+    }
     
-     for (const categoryItem of categoryList) {  
-        const childCategorys = await this.model('category').where({parent_id: categoryItem.id}).limit(100).select();
-        if(childCategorys.length === 0)
-          continue;
-        firstCategoryList.push(...childCategorys);
-      }
+    for (const categoryItem of topCategoryList) {  
+      const childCategorys = await this.model('category').where({parent_id: categoryItem.id}).limit(100).select();
+      if(childCategorys.length === 0)
+        continue;
+      firstCategoryList.push(...childCategorys);
+    }
     
 
     return this.success({
@@ -46,6 +46,7 @@ module.exports = class extends Base {
       tagList: tagList,
       topicList: topicList,
       categoryGoodsList,
+      topCategoryList,
       firstCategoryList,
       others
     });

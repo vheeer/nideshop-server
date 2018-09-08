@@ -137,6 +137,15 @@ module.exports = class extends Base {
   async prepayAction() {
     const that = this;
     console.log("post", this.post());
+    const { distributor_level, real_name, mobile } = this.post();
+
+    // 申请分销商费用
+    let price
+    if(distributor_level === '0' || distributor_level === 0) {
+      price = 800;
+    }else if(distributor_level === '1' || distributor_level === 1) {
+      price = 1800;
+    }
 
     const { userId } = this.ctx.state;
 
@@ -179,9 +188,9 @@ module.exports = class extends Base {
       const returnParams = await WeixinSerivce.createUnifiedOrder({
         body: '商户订单：' + outTradeNo,
         out_trade_no: outTradeNo,
-        total_fee: 1,
+        total_fee: price,
         spbill_create_ip: '',
-        attach: "user_id=" + userId + "&account=" + currentAccount + "&is_sub=" + is_sub
+        attach: "user_id=" + userId + "&account=" + currentAccount + "&is_sub=" + is_sub + "&real_name=" + real_name + "&mobile=" + mobile + "&distributor_level=" + distributor_level
       });
       console.log("统一下单返回：", returnParams);
       return this.success(returnParams);
