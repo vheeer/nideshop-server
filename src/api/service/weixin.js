@@ -153,17 +153,17 @@ module.exports = class extends think.Service {
       const mchInfo = await that.model("account", "mch").where({ acc: account }).find();
       partner_key = mchInfo.partner_key;
     }
-    console.log("秘钥", partner_key);
+    // console.log("秘钥", partner_key);
 
     if (notifyObj.return_code !== 'SUCCESS' || notifyObj.result_code !== 'SUCCESS') {
       return false;
     }
     const signString = this.signQuery(this.buildQuery(notifyObj), partner_key);
-    console.log("签名后", notifyObj);
+    // console.log("签名后", notifyObj);
     if (think.isEmpty(sign) || signString !== sign) {
       return false;
     }
-    console.log("比较后", notifyObj);
+    // console.log("比较后", notifyObj);
     return { ...attach_obj, ...notifyObj };
   }
 

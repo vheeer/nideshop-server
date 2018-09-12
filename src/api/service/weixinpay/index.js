@@ -137,7 +137,7 @@ WeiXinPay
 
 
 		const body = builder.buildObject(ops);
-		console.log("统一下单提交body ", body);
+		// console.log("统一下单提交body ", body);
 		request({
 			url: that.url.unifiedorder,
 			method: 'POST',
@@ -148,7 +148,7 @@ WeiXinPay
 			}
 		}, function(err, response, body) {
 			parseString(body, function(err, result) {
-				console.log("body", body);
+				// console.log("body", body);
 				fn(that.parseWXReturnXML(result));
 			});
 		});

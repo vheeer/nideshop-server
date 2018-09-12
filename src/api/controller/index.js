@@ -13,7 +13,7 @@ module.exports = class extends Base {
     const topicList = await this.model('topic').where({ is_show: 1 }).order({ sort_order: 'asc' }).limit(3).select();
     const others = await this.model('others').select();
 
-    const topCategoryList = await this.model('category').where({parent_id: 0, name: ['<>', '推荐']}).order("show_index").select();
+    const topCategoryList = await this.model('category').where({is_show: 1, parent_id: 0, name: ['<>', '推荐']}).order("show_index").select();
     let categoryGoodsList = [];
     let firstCategoryList = [];
     

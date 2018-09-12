@@ -137,19 +137,21 @@ module.exports = class extends Base {
   async prepayAction() {
     const that = this;
     console.log("post", this.post());
-    const { distributor_level, real_name, mobile } = this.post();
+    const thisTime = Math.round(new Date().getTime()/1000);
+    const { distributor_level, real_name } = this.post();
+    const { userId } = this.ctx.state;
+
+    const updateUser = await this.model('user').where({ id: userId }).update({ real_name, distributor_level });
 
     // 申请分销商费用
     let price
     if(distributor_level === '0' || distributor_level === 0) {
-      price = 800;
-    }else if(distributor_level === '1' || distributor_level === 1) {
       price = 1800;
+    }else if(distributor_level === '1' || distributor_level === 1) {
+      price = 800;
     }
 
-    const { userId } = this.ctx.state;
-
-    const openid = await this.model('user').where({ id: userId }).getField('weixin_openid', true);
+    const { weixin_openid: openid, referee } = await this.model('user').where({ id: userId }).find();
 
     if (think.isEmpty(openid)) {
       return this.fail('找不到openid，微信支付失败');
@@ -168,7 +170,7 @@ module.exports = class extends Base {
         mch_id: that.config("operator.mch_id"),
         partner_key: params.partner_key,
         sub_appid: params.appid,
-        sub_mch_id: params.mch_id, 
+        sub_mch_id: params.mch_id,
         sub_openid: openid
       }
     }else{
@@ -185,14 +187,26 @@ module.exports = class extends Base {
     try {
       //统一下单
       const outTradeNo = Date.now() + "" + Math.round(new Date().getTime()/1000);
+      const joinParams = {
+        user_id: userId,
+        pay_status: 1,
+        distribute_level: parseInt(distributor_level),
+        out_trade_no: outTradeNo,
+        total_fee: price,
+        referee,
+        add_time: thisTime
+      }
+      const joinRes = await this.model("join").add(joinParams);
       const returnParams = await WeixinSerivce.createUnifiedOrder({
         body: '商户订单：' + outTradeNo,
         out_trade_no: outTradeNo,
         total_fee: price,
         spbill_create_ip: '',
-        attach: "user_id=" + userId + "&account=" + currentAccount + "&is_sub=" + is_sub + "&real_name=" + real_name + "&mobile=" + mobile + "&distributor_level=" + distributor_level
+        attach: "&account=" + currentAccount + "&is_sub=" + is_sub + "&type=1"
       });
       console.log("统一下单返回：", returnParams);
+
+
       return this.success(returnParams);
     } catch (err) {
       think.logger.warn('微信支付失败', err);

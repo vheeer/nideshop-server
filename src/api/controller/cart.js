@@ -24,8 +24,13 @@ module.exports = class extends Base {
       checkedGoodsAmount = parseFloat(checkedGoodsAmount.toFixed(2));
 
       // 查找商品的图片
-      const { list_pic_url, is_free_delivery, freight } = await this.model('goods').where({id: cartItem.goods_id}).find();
+      let { list_pic_url, is_free_delivery, freight } = await this.model('goods').where({id: cartItem.goods_id}).find();
+      const { freight: commenFreight } = await this.model('others').limit(1).find();
       cartItem.list_pic_url = list_pic_url;
+
+      if (freight === undefined || freight === null) {
+        freight = commenFreight
+      }
       if(is_free_delivery === 1){
         freight_min = 0;
       }
@@ -34,6 +39,7 @@ module.exports = class extends Base {
       }
     }
     freight = freight_min;
+    console.log("购物车中商品的运费", freight)
     return {
       cartList: cartList,
       freight,

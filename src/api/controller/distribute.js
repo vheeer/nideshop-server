@@ -2,7 +2,15 @@ const Base = require('./base.js');
 
 import WechatPayment from "wx-payment";
 import fs from "fs";
-const request = require('request');
+const request = require('request');   
+// ES6
+WechatPayment.transfers_promise = orderData => new Promise((resolve, reject) =>
+  WechatPayment.transfers(orderData, function(err, result){
+    if(err)
+      reject(err);
+    resolve(result);
+  })
+);
 
 
 module.exports = class extends Base {
@@ -31,27 +39,24 @@ module.exports = class extends Base {
   	WechatPayment.init(options);
 
   	let orderData = {
-  	  partner_trade_no: parseInt(Math.random() * 100000000), //商户订单号，需保持唯一性
-  	  openid,
-  	  check_name: 'OPTION_CHECK',
-  	  re_user_name: real_name,
-  	  amount,
-  	  desc: '付款',
-  	  spbill_create_ip: '192.168.0.1'
+      partner_trade_no: Date.now() + "" + Math.round(new Date().getTime()/1000), //商户订单号，需保持唯一性
+      openid,
+      check_name: 'OPTION_CHECK',
+      re_user_name: real_name,
+      amount,
+      desc: '付款',
+      spbill_create_ip: '192.168.0.1'
   	}
   	console.log("退款订单：", orderData);
 
-  	// ES6
-  	WechatPayment.transfers_promise = orderData => new Promise((resolve, reject) =>
-  		WechatPayment.transfers(orderData, function(err, result){
-  		  if(err)
-  		  	reject(err);
-  		  resolve(result);
-  		})
-  	);
   	const result = await WechatPayment.transfers_promise(orderData);
-  	console.log(result);
-  	return this.success("success");
+    console.log('退款结果', result);
+    if (result.result_code === 'SUCCESS') {
+      // const { balance } = this.
+      return this.success();
+    } else {
+      return this.fail('退款错误 - ' + result.return_msg)
+    }
   }
 /*
   async applyAction(){

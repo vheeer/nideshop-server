@@ -22,7 +22,7 @@ module.exports = class extends Base {
 
     // 获取子分类数据
     if (currentCategory && currentCategory.id) {
-      currentCategory.subCategoryList = await model.where({'parent_id': currentCategory.id}).select();
+      currentCategory.subCategoryList = await model.where({'parent_id': currentCategory.id}).order('show_index asc').select();
     }
 
     return this.success({
@@ -41,7 +41,7 @@ module.exports = class extends Base {
     }
     // 获取子分类数据
     if (currentCategory && currentCategory.id) {
-      currentCategory.subCategoryList = await model.where({'parent_id': currentCategory.id}).select();
+      currentCategory.subCategoryList = await model.where({'parent_id': currentCategory.id}).order('show_index asc').select();
     }
 
     return this.success({

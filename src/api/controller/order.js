@@ -87,7 +87,11 @@ module.exports = class extends Base {
     console.log("quickbuyAction post: ", this.post());
     const { goodsId: goods_id, productId: purduct_id, number, addressId: address_id } = this.post();
     const { referee } = await this.model("user").where({ id: this.ctx.state.userId }).find();
-    const { is_contribute } = await this.model("others").limit(1).find();
+    const { is_distribute } = await this.model("others").limit(1).find();
+    const { freight } = await this.model('others').field("freight").limit(1).find();
+
+    console.log('referee ---', referee)
+    console.log('is_distribute ---', is_distribute)
 
     const checkedAddress = await this.model('address').where({ user_id: this.ctx.state.userId, id: address_id }).find();
     if(think.isEmpty(checkedAddress)) {
@@ -107,7 +111,6 @@ module.exports = class extends Base {
     if(is_free_delivery === 1){
       freightPrice = 0;
     }else{
-      const { freight } = await this.model('others').field("freight").limit(1).find();
       if(typeof goods_freight === "number"){
         freightPrice = goods_freight;
       }else{
@@ -184,7 +187,7 @@ module.exports = class extends Base {
       actual_price: actualPrice,
 
       // 推荐人
-      referee: is_contribute?referee:null
+      referee: is_distribute?referee:null
     };
 
     console.log("运费: ", freightPrice)
@@ -227,7 +230,7 @@ module.exports = class extends Base {
     // 获取收货地址信息和计算运费
     const { addressId } = this.post();
     const { referee } = await this.model("user").where({ id: this.ctx.state.userId }).find();
-    const { is_contribute } = await this.model("others").limit(1).find();
+    const { is_distribute, freight: commenFreight } = await this.model("others").limit(1).find();
     const checkedAddress = await this.model('address').where({ id: addressId }).find();
     if (think.isEmpty(checkedAddress)) {
       return this.fail('请选择收货地址');
@@ -239,17 +242,25 @@ module.exports = class extends Base {
       return this.fail('请选择商品');
     }
     // 运费
+    console.log('统一运费', commenFreight);
     let freight_min = 99999;
     let freightPrice;
     for (const goods of checkedGoodsList) {
-      const { is_free_delivery, freight } = await this.model("goods").where({ id: goods.goods_id }).find();
+      let { is_free_delivery, freight: fee } = await this.model("goods").where({ id: goods.goods_id }).find();
+
+      if (fee === undefined || fee === null) {
+        fee = commenFreight
+      }
 
       if(is_free_delivery === 1){
         freight_min = 0;
       }
       if(freight_min > 0){
-        freight_min = Math.min(freight_min, freight);
+        freight_min = Math.min(freight_min, fee);
       }
+      console.log('fee', fee);
+      console.log('freight_min', freight_min);
+      console.log('commenFreight', commenFreight);
     }
     freightPrice = freight_min;
 
@@ -296,7 +307,7 @@ module.exports = class extends Base {
       order_price: orderTotalPrice,
       actual_price: actualPrice,
 
-      referee: is_contribute?referee:null
+      referee: is_distribute?referee:null
     };
 
     // 开启事务，插入订单信息和订单商品
@@ -305,6 +316,8 @@ module.exports = class extends Base {
     if (!orderId) {
       return this.fail('订单提交失败');
     }
+
+    console.log('插入的订单ID', orderId);
 
     // 插入订单关联的商品信息
     const orderGoodsData = [];
@@ -326,8 +339,11 @@ module.exports = class extends Base {
       });
     }
 
-    await this.model('order_goods').addMany(orderGoodsData);
-    await this.model('cart').clearBuyGoods();
+    console.log('准备插入的订单商品', orderGoodsData);
+
+    const addManyRes = await this.model('order_goods').addMany(orderGoodsData);
+    console.log('插入订单商品结果', addManyRes)
+    await this.model('cart').clearBuyGoods(this.ctx.state.userId);
 
     return this.success({ orderInfo: orderInfo });
   }
