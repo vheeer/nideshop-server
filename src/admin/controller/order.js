@@ -1,7 +1,15 @@
 const Base = require('./base.js');
 const Rest = require('./rest.js');
 const { readAction, createAction, updateAction, deleteAction, changeImageAction } = Rest("order");
-const tenpay = require('tenpay-2');
+const wxPayment = require('wx-payment');
+
+wxPayment.refund_promise = orderData => new Promise((resolve, reject) =>
+  wxPayment.refund(orderData, function(err, result){
+    if(err)
+      reject(err);
+    resolve(result);
+  })
+);
 
 class top extends Base {
   async indexAction() {
@@ -162,38 +170,41 @@ class top extends Base {
    * @returns {Promise.<void>}
    */
   async acceptrefundAction() {
+    const _this = this;
     const { mch } = this.ctx.state;
     const orderId = this.post('id');
     const orderInfo = await this.model('order').where({ id: orderId }).find();
-    const { appid: sub_appid, mch_id: sub_mch_id} = await this.model('account', 'mch').where({ acc: mch }).limit(1).find();
+    const { appid, mch_id, partner_key } = await this.model('account', 'mch').where({ acc: mch }).limit(1).find();
+
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');
     }
 
-    const tenpay_config = {
-      appid: this.config("operator.appid"),
-      mchid: this.config("operator.mch_id"),
-      sub_appid,
-      sub_mch_id,
-      partnerKey: this.config("operator.partner_key"),
-      pfx: require('fs').readFileSync(this.config("cert_root") + mch + '/apiclient_cert.p12'),
-      notify_url: this.config("weixin.notify_url"),
-      spbill_create_ip: ''
-    };
-    const api = new tenpay(tenpay_config);
-
-    let result = await api.refund({
-      // transaction_id, out_trade_no 二选一
-      // transaction_id: '微信的订单号',
-      out_trade_no: orderInfo.out_trade_no,
-      out_refund_no: orderInfo.out_trade_no,
-      total_fee: orderInfo.total_fee,
-      refund_fee: orderInfo.total_fee
+    wxPayment.init({
+      appid,
+      mch_id,
+      apiKey: partner_key, //微信商户平台API密钥
+      pfx: require('fs').readFileSync(this.config("cert_root") + mch + '/apiclient_cert.p12'), //微信商户平台证书 (optional，部分API需要使用)
     });
 
-    console.log("退款结果", result);
+    const out_refund_no = parseInt(Date.now()) + Math.round(Math.random() * 1000);
 
-    return this.success(result);
+    const result = await wxPayment.refund_promise({
+      out_refund_no,
+      out_trade_no: orderInfo.out_trade_no,
+      total_fee: orderInfo.actual_price * 100,
+      refund_fee: orderInfo.actual_price * 100,
+      op_user_id: orderInfo.user_id,
+    });
+
+    console.log('退款结果', result);
+
+    if(result.result_code === "SUCCESS"){
+      await _this.model('order').where({ id: orderId }).update({ order_status: 403, out_refund_no });
+      _this.success(result.err_code_des);
+    }else{
+      _this.fail(result.err_code_des);
+    }
   }
 
 

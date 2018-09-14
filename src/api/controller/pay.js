@@ -278,8 +278,9 @@ module.exports = class extends Base {
           // 一级推荐人是分销商--一级返佣
           console.log('一级推荐人是分销商--一级返佣')
           const add_commsion_1 = parseFloat((actual_price * (first_commision/100)).toFixed(2));
-          const new_balance_1 = parseFloat((balance_1 + add_commsion_1).toFixed(2));
-          const add_balance_result_1 = await userModel.where({ id: referee_order }).update({ balance: new_balance_1 }); //返佣
+          // 延期返佣
+          // const new_balance_1 = parseFloat((balance_1 + add_commsion_1).toFixed(2));
+          // const add_balance_result_1 = await userModel.where({ id: referee_order }).update({ balance: new_balance_1 }); //返佣
           const add_commsion_result_1 = await distribute_commisionModel.add({
             user_id: referee_order, 
             commision_price: add_commsion_1, 
@@ -300,8 +301,9 @@ module.exports = class extends Base {
               // 二级推荐人是分销商--二级返佣
               console.log( '二级推荐人是分销商--二级返佣')
               const add_commsion_2 = parseFloat((actual_price * (second_commision/100)).toFixed(2));
-              const new_balance_2 = parseFloat((balance_2 + add_commsion_2).toFixed(2));
-              const add_balance_result_2 = await userModel.where({ id: referee_2 }).update({ balance: new_balance_2 }); //返佣
+              // 延期返佣
+              // const new_balance_2 = parseFloat((balance_2 + add_commsion_2).toFixed(2));
+              // const add_balance_result_2 = await userModel.where({ id: referee_2 }).update({ balance: new_balance_2 }); //返佣
               const add_commsion_result_2 = await distribute_commisionModel.add({
                 user_id: referee_2, 
                 commision_price: add_commsion_2, 

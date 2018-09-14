@@ -146,9 +146,9 @@ module.exports = class extends Base {
     // 申请分销商费用
     let price
     if(distributor_level === '0' || distributor_level === 0) {
-      price = 1800;
-    }else if(distributor_level === '1' || distributor_level === 1) {
       price = 800;
+    }else if(distributor_level === '1' || distributor_level === 1) {
+      price = 1800;
     }
 
     const { weixin_openid: openid, referee } = await this.model('user').where({ id: userId }).find();
