@@ -189,11 +189,13 @@ class top extends Base {
 
     const out_refund_no = parseInt(Date.now()) + Math.round(Math.random() * 1000);
 
+    console.log('实际退款价格', (orderInfo.actual_price * 100).toFixed());
+
     const result = await wxPayment.refund_promise({
       out_refund_no,
       out_trade_no: orderInfo.out_trade_no,
-      total_fee: orderInfo.actual_price * 100,
-      refund_fee: orderInfo.actual_price * 100,
+      total_fee: (orderInfo.actual_price * 100).toFixed(),
+      refund_fee: (orderInfo.actual_price * 100).toFixed(),
       op_user_id: orderInfo.user_id,
     });
 

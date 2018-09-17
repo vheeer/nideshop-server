@@ -58,7 +58,7 @@ module.exports = class extends Base {
       const returnParams = await WeixinSerivce.createUnifiedOrder({
         body: '商户订单：' + orderInfo.order_sn,
         out_trade_no: outTradeNo,
-        total_fee: parseInt(orderInfo.actual_price * 100),
+        total_fee: Math.round((orderInfo.actual_price * 100).toFixed(2)),
         spbill_create_ip: '',
         attach: "account=" + currentAccount + "&is_sub=" + is_sub  //临时
       });
@@ -288,7 +288,7 @@ module.exports = class extends Base {
             add_time: thisTime,
             order_id
           }); //返佣记录
-          console.log('add_balance_result_1', add_balance_result_1);
+          // console.log('add_balance_result_1', add_balance_result_1);
           if(referee_2 === 0){
             // 二级推荐人是总店--不返佣
             console.log( '二级推荐人是总店--不返佣')

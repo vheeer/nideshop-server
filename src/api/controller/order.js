@@ -400,8 +400,10 @@ module.exports = class extends Base {
       return this.fail('订单不存在');
     }
 
+    const thisTime = parseInt(Date.now() / 1000);
+
     const order_result = await this.model('order').updateOrderStatus(orderId, 301);
-    const shipping_result = await this.model('order').where({ id: orderId }).update({ shipping_status: 2 });
+    const shipping_result = await this.model('order').where({ id: orderId }).update({ shipping_status: 2, receive_time: thisTime });
     if(order_result > 0 && shipping_result > 0){
       return this.success('success');
     }else{

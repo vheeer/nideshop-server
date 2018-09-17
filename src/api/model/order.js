@@ -112,7 +112,8 @@ module.exports = class extends think.Model {
   async updatePayStatus(orderId, payStatus = 0) {
     const orderStatus = payStatus === 2 ? 201 : 0;
     // return this.where({id: orderId}).limit(1).update({pay_status: parseInt(payStatus)});
-    return this.where({ id: orderId }).limit(1).update({ pay_status: parseInt(payStatus), order_status: orderStatus });
+    const thisTime = parseInt(Date.now() / 1000);
+    return this.where({ id: orderId }).limit(1).update({ pay_status: parseInt(payStatus), order_status: orderStatus, pay_time: thisTime });
   }
 
   /**

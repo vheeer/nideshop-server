@@ -23,7 +23,7 @@ module.exports = class extends Base {
   	const pfx = fs.readFileSync(certRoot + currentAccount + '/apiclient_cert.p12'); //证书文件
 
   	const { appid, partner_key, mch_id } = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
-  	const { weixin_openid: openid } = await this.model("user").where({ id: user_id }).limit(1).find();
+  	const { weixin_openid: openid, cash_paid, balance } = await this.model("user").where({ id: user_id }).limit(1).find();
 
   	//微信支付参数
   	let options = {
@@ -52,10 +52,34 @@ module.exports = class extends Base {
   	const result = await WechatPayment.transfers_promise(orderData);
     console.log('退款结果', result);
     if (result.result_code === 'SUCCESS') {
-      // const { balance } = this.
-      return this.success();
+      const thisTime = parseInt(Date.now() / 1000);
+      const parseAmount = parseFloat((amount / 100).toFixed(2));
+
+      const new_cash = parseFloat((cash_paid + parseAmount).toFixed(2));
+      const new_balance = parseFloat((balance - parseAmount).toFixed(2));
+      if (new_balance < 0) {
+        return this.fail('余额不足');
+      }
+      const add_cash_paid_result = await this.model('user').where({ id: user_id }).update({ cash_paid: new_cash, balance: new_balance }); //返佣
+
+      const addRes = await this.model("cash_record").add({
+        user_id,
+        amount: parseAmount,
+        add_time: thisTime
+      })
+
+      if (!think.isEmpty(addRes)) {
+        return this.success(add_cash_paid_result);
+      } else {
+        return this.fail('未成功添加提现记录');
+      }
     } else {
-      return this.fail('退款错误 - ' + result.return_msg)
+      let mes = result.return_msg;
+      if (result.err_code === 'SENDNUM_LIMIT')
+        mes = '超出今日提现上限';
+      else if (result.err_code === 'NAME_MISMATCH')
+        mes = '真实姓名不一致'
+      return this.fail('提现错误：' + mes);
     }
   }
 /*
@@ -152,7 +176,7 @@ module.exports = class extends Base {
   async listAction() {
     const user_id = this.ctx.state.userId;
     const userInfo = await this.model("user").where({ id: user_id }).find();
-    const commisions = await this.model("distribute_commision").alias("a").join({ table: "order", on: ['order_id', 'id'] }).where("a.user_id=" + user_id).select();
+    const commisions = await this.model("distribute_commision").alias("a").join({ table: "order", on: ['order_id', 'id'] }).where("a.user_id=" + user_id).order('a.id desc').select();
 
     return this.success(commisions)
   }
