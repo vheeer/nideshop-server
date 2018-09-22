@@ -9,12 +9,15 @@ module.exports = class extends think.Controller {
     if (ingoreURL.indexOf(url) > -1) {
       return;
     }
+    // IP
+    const IP = this.ctx.header['x-forwarder-for'];
+    this.ctx.state.IP = IP;
     // 用户Id
     think.token = this.ctx.header['x-nideshop-token'] || '';
     const tokenSerivce = think.service('token', 'api');
     const userId = await tokenSerivce.getUserId();
     this.ctx.state.userId = userId;
-    console.log('----------------userId--------------', userId);
+    console.log('----------------userId，IP--------------', userId + '，' + IP);
 
     // 如果为非公开，则验证用户是否登录
     const publicController = this.config('publicController');

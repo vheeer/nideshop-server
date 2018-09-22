@@ -141,7 +141,7 @@ module.exports = class extends Base {
     const { distributor_level, real_name } = this.post();
     const { userId } = this.ctx.state;
 
-    const updateUser = await this.model('user').where({ id: userId }).update({ real_name, distributor_level });
+    // const updateUser = await this.model('user').where({ id: userId }).update({ real_name, distributor_level });
 
     // 申请分销商费用
     let price

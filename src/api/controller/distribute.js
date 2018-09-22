@@ -25,6 +25,13 @@ module.exports = class extends Base {
   	const { appid, partner_key, mch_id } = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
   	const { weixin_openid: openid, cash_paid, balance } = await this.model("user").where({ id: user_id }).limit(1).find();
 
+    const parseAmount = parseFloat((amount / 100).toFixed(2));
+    const new_cash = parseFloat((cash_paid + parseAmount).toFixed(2));
+    const new_balance = parseFloat((balance - parseAmount).toFixed(2));
+    if (new_balance < 0) {
+      return this.fail('余额不足');
+    }
+
   	//微信支付参数
   	let options = {
   	  appid,
@@ -53,13 +60,7 @@ module.exports = class extends Base {
     console.log('退款结果', result);
     if (result.result_code === 'SUCCESS') {
       const thisTime = parseInt(Date.now() / 1000);
-      const parseAmount = parseFloat((amount / 100).toFixed(2));
 
-      const new_cash = parseFloat((cash_paid + parseAmount).toFixed(2));
-      const new_balance = parseFloat((balance - parseAmount).toFixed(2));
-      if (new_balance < 0) {
-        return this.fail('余额不足');
-      }
       const add_cash_paid_result = await this.model('user').where({ id: user_id }).update({ cash_paid: new_cash, balance: new_balance }); //返佣
 
       const addRes = await this.model("cash_record").add({

@@ -8,7 +8,7 @@ module.exports = class extends Base {
     const { currentAccount } = this.ctx.state;
     const fullUserInfo = this.post('userInfo');
     const userInfo = fullUserInfo.userInfo;
-    const clientIp = ''; // 暂时不记录 ip
+    const clientIp = this.ctx.state.IP; // 记录 ip
     console.log('currentAccount-----', currentAccount);
     const { app_secret, appid } = await this.model("account", "mch").where({ acc: currentAccount }).limit(1).find();
     console.log("{ app_secret, appid }", app_secret, appid);

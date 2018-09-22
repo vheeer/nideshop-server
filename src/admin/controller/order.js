@@ -179,6 +179,12 @@ class top extends Base {
     if(think.isEmpty(orderInfo)){
       return this.fail('订单不存在');
     }
+    const thisTime = parseInt(Date.now() / 1000);
+    const lastDays = thisTime - (3600 * 24 * 7);
+
+    if (orderInfo.receive_time < lastDays) {
+      return _this.fail('已超出退款期限')
+    }
 
     wxPayment.init({
       appid,
@@ -205,7 +211,7 @@ class top extends Base {
       await _this.model('order').where({ id: orderId }).update({ order_status: 403, out_refund_no });
       _this.success(result.err_code_des);
     }else{
-      _this.fail(result.err_code_des);
+      _this.fail(result.err_code_des?result.err_code_des:'退款失败');
     }
   }
 

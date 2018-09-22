@@ -159,7 +159,7 @@ module.exports = class extends Base {
       const othersModel = this.model("others", currentModel);
       const distribute_commisionModel = this.model("distribute_commision", currentModel);
       const joinModel = this.model('join', currentModel);
-      const { id: join_id, user_id, referee: referee_join, total_fee, distribute_level, pay_status } = await joinModel.where({ out_trade_no }).find();
+      const { id: join_id, user_id, referee: referee_join, total_fee, distributor_level, pay_status } = await joinModel.where({ out_trade_no }).find();
       if (think.isEmpty(join_id)) {
         return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[订单不存在]]></return_msg></xml>`;
       }
@@ -169,7 +169,7 @@ module.exports = class extends Base {
       }
       const changePayStatus = await joinModel.where({ id: join_id }).update({ pay_status: 2, result: JSON.stringify(result), attach });
       // 成为分销商
-      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1 });
+      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1, distributor_level });
       // 分销佣金处理
       const { is_distribute, dream_first_commision, dream_second_commision, angle_first_commision, angle_second_commision } = await othersModel.limit(1).find(); // 佣金比例
       let first_commision = distribute_level === 0?dream_first_commision:(distribute_level === 1?angle_first_commision:null);

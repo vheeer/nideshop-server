@@ -39,6 +39,6 @@ module.exports = [{
   }
 }, {
   cron: '* * * * *',
-  handle: 'crontab/test',
+  handle: 'src/common/service/cron',
   type: 'all'
 }]
