@@ -10,7 +10,8 @@ const instance = new Application({
     presets: ['think-node']
   }],
   notifier: notifier.notify.bind(notifier),
-  env: 'development'
+  env: 'development',
+  port: '8362'
 });
 
 instance.run();

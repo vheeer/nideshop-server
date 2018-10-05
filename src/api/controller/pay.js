@@ -153,13 +153,89 @@ module.exports = class extends Base {
     const thisTime = parseInt(Date.now() / 1000);
 
     // 申请分销支付
-    if(type === '1'){
+    if (type === '1') {
+      console.log('申请分销支付');
+      const userModel = this.model("user", currentModel);
+      const othersModel = this.model("others", currentModel);
+      const distribute_commisionModel = this.model("distribute_commision", currentModel);
+      const postModel = this.model('post', currentModel);
+      const { id: post_id, user_id, referee: referee_post, total_fee, status } = await postModel.where({ out_trade_no }).find();
+      const distributor_level = 1;
+      if (think.isEmpty(post_id)) {
+        return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[订单不存在]]></return_msg></xml>`;
+      }
+      if (status !== 0) {
+        console.log("已经支付成功");
+        return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[已经支付成功]]></return_msg></xml>`;
+      }
+      const changePayStatus = await postModel.where({ id: post_id }).update({ status: 1, result: JSON.stringify(result), attach });
+      // 成为分销商
+      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1, distributor_level: 1 });
+      // 分销佣金处理
+      const { is_distribute, dream_first_commision, dream_second_commision, angle_first_commision, angle_second_commision } = await othersModel.limit(1).find(); // 佣金比例
+      let first_commision = distributor_level === 0?dream_first_commision:(distributor_level === 1?angle_first_commision:null);
+      let second_commision = distributor_level === 0?dream_second_commision:(distributor_level === 1?angle_second_commision:null);
+      if (is_distribute === 1) {
+        // 关闭分销功能--不返佣
+        if(referee_post === null || referee_post === 0){
+          // 订单不参与分销或一级推荐人是总店--不返佣
+          console.log('订单不参与分销或一级推荐人是总店--不返佣')
+        }else{
+          const { is_distributor: referee_1_is_distributor, referee: referee_2, balance: balance_1 } = await userModel.where({ id: referee_join }).find(); //一级推荐人
+          if(referee_1_is_distributor === 0){
+            // 一级推荐人不是分销商--不返佣
+            console.log('一级推荐人不是分销商--不返佣')
+          }else if(referee_1_is_distributor === 1){
+            // 一级推荐人是分销商--一级返佣
+            console.log('一级推荐人是分销商--一级返佣')
+            const add_commsion_1 = parseFloat(((total_fee / 100) * (first_commision / 100)).toFixed(2));
+            const new_balance_1 = parseFloat((balance_1 + add_commsion_1).toFixed(2));
+            const add_balance_result_1 = await userModel.where({ id: referee_post }).update({ balance: new_balance_1 }); //返佣
+            const add_commsion_result_1 = await distribute_commisionModel.add({
+              user_id: referee_post,
+              commision_price: add_commsion_1,
+              level: 1,
+              post_id,
+              type: 1,
+              add_time: thisTime
+            }); //返佣记录
+            console.log('add_balance_result_1', add_balance_result_1);
+            if(referee_2 === 0){
+              // 二级推荐人是总店--不返佣
+              console.log( '二级推荐人是总店--不返佣')
+            }else{
+              const { is_distributor: referee_2_is_distributor, referee: referee_3, balance: balance_2 } = await userModel.where({ id: referee_2 }).find(); //二级推荐人
+              if(referee_2_is_distributor === 0){
+                // 二级推荐人不是分销商（不可能发生）--不返佣
+                console.log( '二级推荐人不是分销商（不可能发生）--不返佣')
+              }else if(referee_2_is_distributor === 1){
+                // 二级推荐人是分销商--二级返佣
+                console.log( '二级推荐人是分销商--二级返佣')
+                const add_commsion_2 = parseFloat(((total_fee / 100) * (second_commision / 100)).toFixed(2));
+                const new_balance_2 = parseFloat((balance_2 + add_commsion_2).toFixed(2));
+                const add_balance_result_2 = await userModel.where({ id: referee_2 }).update({ balance: new_balance_2 }); //返佣
+                const add_commsion_result_2 = await distribute_commisionModel.add({
+                  user_id: referee_2, 
+                  commision_price: add_commsion_2, 
+                  level: 2, 
+                  add_time: thisTime,
+                  post_id,
+                  type: 1
+                }); //返佣记录
+              }
+            }
+          }
+        }
+      }
+      console.log('result ', result);
+      return;
+    } else if (type === '2') {
       console.log('申请分销支付');
       const userModel = this.model("user", currentModel);
       const othersModel = this.model("others", currentModel);
       const distribute_commisionModel = this.model("distribute_commision", currentModel);
       const joinModel = this.model('join', currentModel);
-      const { id: join_id, user_id, referee: referee_join, total_fee, distributor_level, pay_status } = await joinModel.where({ out_trade_no }).find();
+      const { id: join_id, user_id, referee: referee_join, total_fee, distribute_level: distributor_level, pay_status } = await joinModel.where({ out_trade_no }).find();
       if (think.isEmpty(join_id)) {
         return `<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[订单不存在]]></return_msg></xml>`;
       }
@@ -169,11 +245,11 @@ module.exports = class extends Base {
       }
       const changePayStatus = await joinModel.where({ id: join_id }).update({ pay_status: 2, result: JSON.stringify(result), attach });
       // 成为分销商
-      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1, distributor_level });
+      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1, distributor_level, remainder: 10 });
       // 分销佣金处理
       const { is_distribute, dream_first_commision, dream_second_commision, angle_first_commision, angle_second_commision } = await othersModel.limit(1).find(); // 佣金比例
-      let first_commision = distribute_level === 0?dream_first_commision:(distribute_level === 1?angle_first_commision:null);
-      let second_commision = distribute_level === 0?dream_second_commision:(distribute_level === 1?angle_second_commision:null);
+      let first_commision = distributor_level === 0?dream_first_commision:(distributor_level === 1?angle_first_commision:null);
+      let second_commision = distributor_level === 0?dream_second_commision:(distributor_level === 1?angle_second_commision:null);
       if (is_distribute === 1) {
         // 关闭分销功能--不返佣
         if(referee_join === null || referee_join === 0){

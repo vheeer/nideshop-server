@@ -125,8 +125,8 @@ module.exports = class extends Base {
     const { currentAccount } = this.ctx.state;
   	const userId = this.ctx.state.userId;
   	const user_info = await this.model("user").where({ id: userId }).limit(1).find();
-    const referee_user_info = await this.model("user").where({ id: user_info.referee }).limit(1).find();
-  	const { id, balance, cash_paid } = user_info;
+    // const referee_user_info = await this.model("user").where({ id: user_info.referee }).limit(1).find();
+  	const { id, balance, cash_paid, remainder } = user_info;
     let { code } = user_info;
   	// 佣金总额
   	const cash_total = parseFloat((balance + cash_paid).toFixed(2));
@@ -135,6 +135,16 @@ module.exports = class extends Base {
   	const before = await this.model("user").field("id").where({ referee: userId }).select(); //查询我的代理商
 
   	before.forEach(({ id: father_id }) => my_team.add(father_id));
+    // 帖子信息
+    const posts = await this.model('post').where({ user_id: userId }).select();
+    const totalpost = posts.length;
+    const reviewPost = [];
+    posts.forEach(post => {
+      if (post.status === 1) {
+        reviewPost.push(post);
+      }
+    })
+    const revieing = reviewPost.length;
 
     // 分享背景图
     const { share_background } = await this.model("others").limit(1).find();
@@ -171,7 +181,10 @@ module.exports = class extends Base {
   		cash_total, 
       code,
       share_background,
-  		my_team: my_team.size
+  		my_team: my_team.size,
+      totalpost,
+      revieing,
+      remainder
   	});
   }
   async listAction() {

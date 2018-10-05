@@ -130,15 +130,15 @@ module.exports = class extends Base {
     }
   }
 
-      /**
-   * 获取支付的请求参数
+  /**
+   * 加入支付
    * @returns {Promise<PreventPromise|void|Promise>}
    */
-  async prepayAction() {
+  async joinAction() {
     const that = this;
     console.log("post", this.post());
     const thisTime = Math.round(new Date().getTime()/1000);
-    const { distributor_level, real_name } = this.post();
+    const { distributor_level } = this.post();
     const { userId } = this.ctx.state;
 
     // const updateUser = await this.model('user').where({ id: userId }).update({ real_name, distributor_level });
@@ -148,7 +148,7 @@ module.exports = class extends Base {
     if(distributor_level === '0' || distributor_level === 0) {
       price = 800;
     }else if(distributor_level === '1' || distributor_level === 1) {
-      price = 1800;
+      price = 3600;
     }
 
     const { weixin_openid: openid, referee } = await this.model('user').where({ id: userId }).find();
@@ -202,6 +202,77 @@ module.exports = class extends Base {
         out_trade_no: outTradeNo,
         total_fee: price,
         spbill_create_ip: '',
+        attach: "&account=" + currentAccount + "&is_sub=" + is_sub + "&type=2"
+      });
+      console.log("统一下单返回：", returnParams);
+
+
+      return this.success(returnParams);
+    } catch (err) {
+      think.logger.warn('微信支付失败', err);
+      return this.fail('微信支付失败');
+    }
+  }
+  /**
+   * 发帖支付
+   * @returns {Promise<PreventPromise|void|Promise>}
+   */
+  async prepayAction() {
+    const that = this;
+    console.log("post", this.post());
+    const thisTime = Math.round(new Date().getTime()/1000);
+    const { post_id, remainder_after } = this.post();
+    const { userId } = this.ctx.state;
+
+
+    const { weixin_openid: openid, referee } = await this.model('user').where({ id: userId }).find();
+    if (!think.isEmpty(remainder_after)) {
+      const updateUser = await this.model('user').where({ id: userId }).update({ remainder: remainder_after });
+    }
+
+    if (think.isEmpty(openid)) {
+      return this.fail('找不到openid，微信支付失败');
+    }
+    // 价格计算
+    let { post_price } = await this.model('post').where({ id: post_id }).find();
+    post_price = parseFloat((post_price * 100).toFixed(2))
+
+    const { currentAccount } = this.ctx.state;
+    const params = await this.model('account', 'mch').where({ acc: currentAccount }).find();
+
+    const { is_sub } = params;
+    let WeixinSerivce_params;
+    if(is_sub === 1){
+      // 服务商模式
+      WeixinSerivce_params = {
+        is_sub,
+        appid: that.config("operator.appid"),
+        mch_id: that.config("operator.mch_id"),
+        partner_key: params.partner_key,
+        sub_appid: params.appid,
+        sub_mch_id: params.mch_id,
+        sub_openid: openid
+      }
+    }else{
+      // 非服务商模式
+      WeixinSerivce_params = {
+        is_sub,
+        appid: params.appid,
+        mch_id: params.mch_id, 
+        partner_key: params.partner_key,
+        openid
+      }
+    }
+    const WeixinSerivce = this.service('weixin', 'api', WeixinSerivce_params);
+    try {
+      //统一下单
+      const outTradeNo = Date.now() + "" + Math.round(new Date().getTime()/1000);
+      const postRes = await this.model("post").where({ id: post_id }).update({ out_trade_no: outTradeNo });
+      const returnParams = await WeixinSerivce.createUnifiedOrder({
+        body: '商户订单：' + outTradeNo,
+        out_trade_no: outTradeNo,
+        total_fee: post_price,
+        spbill_create_ip: '',
         attach: "&account=" + currentAccount + "&is_sub=" + is_sub + "&type=1"
       });
       console.log("统一下单返回：", returnParams);
@@ -212,5 +283,16 @@ module.exports = class extends Base {
       think.logger.warn('微信支付失败', err);
       return this.fail('微信支付失败');
     }
+  }
+  async userAction() {
+    const { user_id } = this.get();
+    const userInfo = await this.model('user').field('id, nickname, avatar, gender').where({ id: user_id }).find();
+    return this.success(userInfo);
+  }
+  async reduceAction() {
+    let { remainder } = await this.model('user').where({ id: this.ctx.state.userId }).find();
+    remainder --;
+    const result = await this.model('user').where({ id: this.ctx.state.userId }).update({ remainder });
+    return this.success(result)
   }
 };

@@ -74,8 +74,10 @@ module.exports = class extends think.Service {
 	    console.log('对象储存路径', save_path);
 	    const { err, data } = await upload_p("nideshop-admin-dva-1256171234", path, save_path);
 	    console.log('分片上传data', data);
-	    if(err)
+	    if(err){
+	    	console.log('上传错误：', err)
 	    	return { err };
+	    }
 		//返回保存路径
 	   	let { Location: url } = data;
 	   	url = "https://" + url;
