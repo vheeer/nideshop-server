@@ -11,7 +11,11 @@ module.exports = class extends Base {
     const brandList = await this.model('brand').where({ is_show: 1 }).order({ new_sort_order: 'asc' }).limit(4).select();
     const tagList = await this.model('tag').where({ is_show: 1 }).order({ new_sort_order: 'asc' }).limit(4).select();
     const topicList = await this.model('topic').where({ is_show: 1 }).order({ sort_order: 'asc' }).limit(3).select();
-    const others = await this.model('others').select();
+    const { is_o } = await this.model('user').where({ id: this.ctx.state.userId}).find();
+    const others = await this.model('others').limit(1).find();
+    if (is_o === 1) {
+      others.status = 0;
+    }
 
     const topCategoryList = await this.model('category').where({is_show: 1, parent_id: 0, name: ['<>', '推荐']}).order("show_index").select();
     let categoryGoodsList = [];
@@ -48,7 +52,7 @@ module.exports = class extends Base {
       categoryGoodsList,
       topCategoryList,
       firstCategoryList,
-      others
+      others: others
     });
   }
 };

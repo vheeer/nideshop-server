@@ -55,6 +55,28 @@ exports.model = {
     user: 'root',
     password: ';Classmate1133',
     dateStrings: true
+  },
+  star: {  
+    handle: mysql,
+    database: 'nideshop_star',
+    prefix: 'nideshop_',
+    encoding: 'utf8mb4',
+    host: '127.0.0.1',
+    port: '3306',
+    user: 'root',
+    password: ';Classmate1133',
+    dateStrings: true
+  },
+  shangxun: {  
+    handle: mysql,
+    database: 'nideshop_shangxun',
+    prefix: 'nideshop_',
+    encoding: 'utf8mb4',
+    host: '127.0.0.1',
+    port: '3306',
+    user: 'root',
+    password: ';Classmate1133',
+    dateStrings: true
   }
 };
 

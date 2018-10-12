@@ -6,6 +6,9 @@ module.exports = class extends think.Model {
         type: think.Model.BELONG_TO,
         key: 'user_id',
         field: "id, nickname, avatar"
+      },
+      post_img: {
+        type: think.Model.HAS_MANY
       }
     }
   }

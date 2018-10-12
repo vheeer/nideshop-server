@@ -68,13 +68,13 @@ class controller extends think.Controller {
         return this.fail("账号或密码错误");
     }
   }
-  async logout() {
+  async logoutAction() {
     this.ctx.cookies.set('login', '0', { maxAge: 3600*24*1*1000 });
     this.ctx.cookies.set('userName', "userName", { maxAge: -3600*24*1*1000 });
     this.ctx.cookies.set('id', "id", { maxAge: -3600*24*1*1000 });
     return this.success(1);
   }
-  async register() {
+  async registerAction() {
     const { userName, password } = this.post();
     const _insert = {
         acc: userName,

@@ -154,7 +154,7 @@ module.exports = class extends Base {
 
     // 申请分销支付
     if (type === '1') {
-      console.log('申请分销支付');
+      console.log('发帖支付');
       const userModel = this.model("user", currentModel);
       const othersModel = this.model("others", currentModel);
       const distribute_commisionModel = this.model("distribute_commision", currentModel);
@@ -170,7 +170,7 @@ module.exports = class extends Base {
       }
       const changePayStatus = await postModel.where({ id: post_id }).update({ status: 1, result: JSON.stringify(result), attach });
       // 成为分销商
-      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1, distributor_level: 1 });
+      const distributorRes = await userModel.where({ id: user_id }).update({ is_distributor: 1, distributor_level_1: 1 });
       // 分销佣金处理
       const { is_distribute, dream_first_commision, dream_second_commision, angle_first_commision, angle_second_commision } = await othersModel.limit(1).find(); // 佣金比例
       let first_commision = distributor_level === 0?dream_first_commision:(distributor_level === 1?angle_first_commision:null);

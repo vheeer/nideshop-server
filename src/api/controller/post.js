@@ -16,29 +16,17 @@ class Controller extends Base {
   	const currentTime = thisTime - 3600 * 24 * 30;
   	if (parseInt(page) === 1) {
 	  	const topPosts = await this.model(namespace).where({ 'status': 2, is_top: 1, add_time: [ '>', currentTime ] }).order('id desc').select();
-	  	const result = await this.model(namespace).where({ 'status': 2 }).order('id desc').page(page, 13).countSelect();
-	  	topPosts.push(...result.data);
-	  	console.log('topPosts.length', topPosts.length)
-	  	const allArr = []
+	  	const { data: mainPosts } = await this.model(namespace).where({ 'status': 2, is_top: 0 }).order('id desc').page(page, 13).countSelect();
+      console.log('topPosts.length', topPosts)
+      console.log('mainPosts.length', mainPosts)
 
-	  	for(var i=0;i<topPosts.length;i++){
-		　　var flag = true;
-		　　for(var j=0;j<allArr.length;j++){
-		　　　　if(topPosts[i].id == allArr[j].id){
-		　　　　　　flag = false;
-		　　　　};
-		　　}; 
-		　　if(flag){
-		　　　　allArr.push(topPosts[i]);
-		　　};
-		};
-	  	console.log('topPosts.length', allArr.length)
-
+	  	const allArr = [ ...topPosts, ...mainPosts ]
+      
 	  	return this.success(allArr);
-	} else {
-		const result = await this.model(namespace).where({ 'status': 2 }).order('id desc').page(page, 13).countSelect();
-		return this.success(result.data)
-	}
+  	} else {
+  		const result = await this.model(namespace).where({ 'status': 2, is_top: 0 }).order('id desc').page(page, 13).countSelect();
+  		return this.success(result.data)
+  	}
   }
   async addviewAction() {
   	const { post_id } = this.get();

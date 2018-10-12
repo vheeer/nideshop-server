@@ -4,14 +4,14 @@ const API_prepay = "https://api.mch.weixin.qq.com/pay/unifiedorder";
 const partner_key = "dapingkejidapingkejidapingkejida";
 let appid = "wx837d9b849dd800b5";
 let mch_id = "1502889921";
-let notify_url = "https://www.yinmudianying.club/nideshop-mul-dev/api/pay/notify";
+let notify_url = "https://www.yinmudianying.club/onshop-dev/api/pay/notify";
 module.exports = {
-  port: 8362, // server port生产模式下为8361
+  port: 8365, // server port生产模式下为8364
   default_module: 'api',
   default_controller: 'auth', 
   default_action: 'test',
   cert_root: '/var/certs/', //证书根目录
-  file_path: "https://www.yinmudianying.club/nideshop-mul/files",
+  file_path: "https://www.yinmudianying.club/onshop-dev/files",
   bucket: "nideshop-admin-dva-1256171234",
   operator: {
     appid, //服务商服务号appid

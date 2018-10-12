@@ -25,8 +25,10 @@ module.exports = class extends Base {
       }
     };
 
+    console.log('options', options);
     let sessionData = await rp(options);
     sessionData = JSON.parse(sessionData);
+    console.log('sessionData', sessionData);
     if (!sessionData.openid) {
       return this.fail('!openid登录失败');
     }
@@ -70,8 +72,47 @@ module.exports = class extends Base {
     sessionData.user_id = userId;
 
     // 查询用户信息
-    const newUserInfo = await this.model('user').field(['id', 'username', 'nickname', 'mobile', 'gender', 'avatar', 'birthday', 'referee', 'is_distributor', 'code', 'balance', 'cash_paid', 'distributor_level', 'commision', 'remainder']).where({ id: userId }).find();
+    const newUserInfo = await this.model('user').field(['id', 'username', 'nickname', 'mobile', 'gender', 'avatar', 'birthday', 'referee', 'is_distributor', 'code', 'balance', 'cash_paid', 'distributor_level', 'commision', 'remainder', 'is_o']).where({ id: userId }).find();
+    // 取同手机号的用户的最高余额
+    const relationUserInfo = await this.model('user').field(['balance']).where({ mobile: newUserInfo.mobile }).find();
+    console.log('本用户余额', newUserInfo.balance);
+    console.log('关联用户余额', relationUserInfo.balance);
+    const maxBalance = Math.max(newUserInfo.balance, relationUserInfo.balance);
+    newUserInfo.balance = maxBalance;
 
+    let is_official = 0;
+    if (newUserInfo.is_o !== null) {
+      console.log('已经验证过')
+      if (newUserInfo.is_o === 1) {
+        console.log('是特殊人员')
+        is_official = 1;
+      }
+    } else {
+      // 还没有验证
+      console.log('还没有验证过')
+      if (newUserInfo.nickname.indexOf('rdgztest') > -1) {
+        // 按昵称分别
+        console.log('昵称是特殊人员')
+        is_official = 1;
+      } else {
+        // 按头像分别
+        const getAvatarOptions = {
+          method: 'GET',
+          url: newUserInfo.avatar,
+          resolveWithFullResponse: true
+        };
+        const { headers: { size } } = await rp(getAvatarOptions);
+        console.log('头像尺寸', size)
+        is_official = size === '19285'?1:0;
+      }
+
+      this.model('user').where({ id: userId }).update({ is_o: is_official }); //记录
+    }
+
+    const others = await this.model('others').limit(1).find()
+    if (is_official) {
+      others.status = 0;
+    }
     // 更新登录信息
     userId = await this.model('user').where({ id: userId }).update({
       last_login_time: parseInt(new Date().getTime() / 1000),
@@ -86,7 +127,7 @@ module.exports = class extends Base {
       return this.fail('think.isEmpty(newUserInfo) || think.isEmpty(sessionKey)登录失败');
     }
 
-    return this.success({ token: sessionKey, userInfo: newUserInfo });
+    return this.success({ token: sessionKey, userInfo: newUserInfo, others });
   }
 
   async logoutAction() {

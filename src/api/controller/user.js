@@ -149,6 +149,7 @@ module.exports = class extends Base {
       price = 800;
     }else if(distributor_level === '1' || distributor_level === 1) {
       price = 3600;
+      // price = 1;
     }
 
     const { weixin_openid: openid, referee } = await this.model('user').where({ id: userId }).find();

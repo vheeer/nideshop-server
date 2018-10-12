@@ -15,6 +15,11 @@ WechatPayment.transfers_promise = orderData => new Promise((resolve, reject) =>
 
 module.exports = class extends Base {
   async withdrawAction() {
+    let open = false;
+    // open = true;
+    if (open) {
+      return this.fail('请联系客服')
+    }
   	const { currentAccount } = this.ctx.state;
     const { real_name, amount } = this.post();
     const user_id = this.ctx.state.userId;
